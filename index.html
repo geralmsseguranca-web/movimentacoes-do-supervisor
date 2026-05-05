@@ -5,6 +5,183 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Movimentações do Supervisor</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore, collection, doc, setDoc, getDoc, getDocs,
+    deleteDoc, onSnapshot, query, orderBy
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAQYrG7IHs1EOjQtL5NqZYNEr4jxEpn5dc",
+    authDomain: "movimentacoes-do-supervisor.firebaseapp.com",
+    projectId: "movimentacoes-do-supervisor",
+    storageBucket: "movimentacoes-do-supervisor.firebasestorage.app",
+    messagingSenderId: "923566436835",
+    appId: "1:923566436835:web:6031baf0842e444af170d6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // ── helpers para expor ao escopo global ──
+  window._db = db;
+  window._fbReady = false;
+
+  // ── STATUS ONLINE ──
+  function setOnlineStatus(online){
+    const bar = document.getElementById('firebase-status');
+    if(!bar) return;
+    bar.textContent = online ? '🟢 Firebase conectado' : '🔴 Offline (dados locais)';
+    bar.style.color  = online ? 'var(--ok)' : 'var(--danger)';
+  }
+  window.addEventListener('online',  () => setOnlineStatus(true));
+  window.addEventListener('offline', () => setOnlineStatus(false));
+
+  // ══════════════════════════════════
+  // REGISTROS (Vistorias)
+  // ══════════════════════════════════
+  window.fbSalvarRegistro = async function(reg){
+    try {
+      await setDoc(doc(db,'registros', String(reg.id)), reg);
+    } catch(e){ console.warn('Firebase write registros:', e); }
+  };
+
+  window.fbExcluirRegistro = async function(id){
+    try { await deleteDoc(doc(db,'registros', String(id))); }
+    catch(e){ console.warn('Firebase del registros:', e); }
+  };
+
+  window.fbCarregarRegistros = async function(){
+    try {
+      const snap = await getDocs(query(collection(db,'registros'), orderBy('data','desc')));
+      const arr = snap.docs.map(d => d.data());
+      localStorage.setItem('supervisorRegistros', JSON.stringify(arr));
+      window.registros = arr;
+      if(typeof renderBanco === 'function') renderBanco();
+      if(typeof renderRelatorio === 'function') renderRelatorio();
+      if(typeof atualizarStats === 'function') atualizarStats();
+      if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+    } catch(e){ console.warn('Firebase load registros:', e); }
+  };
+
+  // ══════════════════════════════════
+  // TURNOS
+  // ══════════════════════════════════
+  window.fbSalvarTurno = async function(turno){
+    try {
+      await setDoc(doc(db,'turnos', String(turno.id)), turno);
+    } catch(e){ console.warn('Firebase write turnos:', e); }
+  };
+
+  window.fbExcluirTurno = async function(id){
+    try { await deleteDoc(doc(db,'turnos', String(id))); }
+    catch(e){ console.warn('Firebase del turnos:', e); }
+  };
+
+  window.fbCarregarTurnos = async function(){
+    try {
+      const snap = await getDocs(query(collection(db,'turnos'), orderBy('dataIni','desc')));
+      const arr = snap.docs.map(d => d.data());
+      localStorage.setItem('supervisorTurnos', JSON.stringify(arr));
+      window.turnos = arr;
+      if(typeof renderHistoricoTurnos === 'function') renderHistoricoTurnos();
+      if(typeof renderTurnosBanco === 'function') renderTurnosBanco();
+      if(typeof atualizarStats === 'function') atualizarStats();
+    } catch(e){ console.warn('Firebase load turnos:', e); }
+  };
+
+  // TURNO ATIVO (documento único)
+  window.fbSalvarTurnoAtivo = async function(turno){
+    try {
+      if(turno) await setDoc(doc(db,'meta','turnoAtivo'), turno);
+      else       await deleteDoc(doc(db,'meta','turnoAtivo'));
+    } catch(e){ console.warn('Firebase turnoAtivo:', e); }
+  };
+
+  window.fbCarregarTurnoAtivo = async function(){
+    try {
+      const snap = await getDoc(doc(db,'meta','turnoAtivo'));
+      if(snap.exists()){
+        const t = snap.data();
+        localStorage.setItem('turnoAtivo', JSON.stringify(t));
+        window.turnoAtivo = t;
+        if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+      }
+    } catch(e){ console.warn('Firebase load turnoAtivo:', e); }
+  };
+
+  // ══════════════════════════════════
+  // CADASTROS (supervisores, postos, colaboradores)
+  // ══════════════════════════════════
+  window.fbSalvarCad = async function(tipo, arr){
+    try {
+      await setDoc(doc(db,'cadastros', tipo), { items: arr });
+    } catch(e){ console.warn('Firebase write cad:', e); }
+  };
+
+  window.fbCarregarCads = async function(){
+    try {
+      const tipos = ['supervisores','colaboradores','postos'];
+      for(const tipo of tipos){
+        const snap = await getDoc(doc(db,'cadastros', tipo));
+        if(snap.exists()){
+          const arr = snap.data().items || [];
+          localStorage.setItem(window.CADS[tipo].key, JSON.stringify(arr));
+        }
+      }
+      if(typeof atualizarSelectsFormulario === 'function') atualizarSelectsFormulario();
+      if(typeof renderCadLista === 'function'){
+        renderCadLista('supervisores');
+        renderCadLista('colaboradores');
+        renderCadLista('postos');
+      }
+    } catch(e){ console.warn('Firebase load cads:', e); }
+  };
+
+  // ══════════════════════════════════
+  // VEÍCULOS
+  // ══════════════════════════════════
+  window.fbSalvarVeiculos = async function(veiculos){
+    try {
+      await setDoc(doc(db,'cadastros','veiculos'), { items: veiculos });
+    } catch(e){ console.warn('Firebase write veiculos:', e); }
+  };
+
+  window.fbCarregarVeiculos = async function(){
+    try {
+      const snap = await getDoc(doc(db,'cadastros','veiculos'));
+      if(snap.exists()){
+        const arr = snap.data().items || [];
+        localStorage.setItem('cadVeiculos', JSON.stringify(arr));
+        const placas = arr.map(v => v.placa);
+        localStorage.setItem('vtrPlacas', JSON.stringify(placas));
+        window.placas = placas;
+        if(typeof atualizarSelectPlacas === 'function') atualizarSelectPlacas();
+        if(typeof renderVeiculosLista === 'function') renderVeiculosLista();
+      }
+    } catch(e){ console.warn('Firebase load veiculos:', e); }
+  };
+
+  // ══════════════════════════════════
+  // INICIALIZAÇÃO — carrega tudo do Firebase ao abrir
+  // ══════════════════════════════════
+  window.addEventListener('load', async () => {
+    setOnlineStatus(navigator.onLine);
+    // aguarda o app principal inicializar
+    await new Promise(r => setTimeout(r, 300));
+    await Promise.all([
+      window.fbCarregarRegistros(),
+      window.fbCarregarTurnos(),
+      window.fbCarregarTurnoAtivo(),
+      window.fbCarregarCads(),
+      window.fbCarregarVeiculos(),
+    ]);
+    window._fbReady = true;
+    if(typeof showToast === 'function') showToast('☁️ Dados sincronizados com Firebase!');
+  });
+</script>
 <style>
   :root {
     --bg: #0a0e14;
@@ -653,7 +830,10 @@
     <h1>Movimentações do Supervisor</h1>
     <p>Segurança Privada — Portaria · Zeladoria · Serviços Gerais · Vigia</p>
   </div>
-  <div id="clock"></div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-left:auto;">
+    <div id="clock"></div>
+    <div id="firebase-status" style="font-size:0.6rem;color:var(--muted);letter-spacing:0.3px;">⏳ Conectando...</div>
+  </div>
 </header>
 
 <div class="tabs">
@@ -1587,6 +1767,7 @@ function abrirTurno(){
     obsIni: document.getElementById('t_obs_ini').value,
   };
   localStorage.setItem('turnoAtivo', JSON.stringify(turnoAtivo));
+  if(typeof fbSalvarTurnoAtivo === 'function') fbSalvarTurnoAtivo(turnoAtivo);
   atualizarStatusTurno();
   showToast('🟢 Turno aberto com sucesso!');
 }
@@ -1614,6 +1795,8 @@ function encerrarTurno(){
   turnos.unshift(turnoCompleto);
   localStorage.setItem('supervisorTurnos', JSON.stringify(turnos));
   localStorage.removeItem('turnoAtivo');
+  if(typeof fbSalvarTurno === 'function') fbSalvarTurno(turnoCompleto);
+  if(typeof fbSalvarTurnoAtivo === 'function') fbSalvarTurnoAtivo(null);
   turnoAtivo = null;
 
   // Limpar campos encerramento
@@ -1630,6 +1813,7 @@ function encerrarTurno(){
 function cancelarAbertura(){
   if(!confirm('Cancelar a abertura de turno? Os dados serão perdidos.')) return;
   localStorage.removeItem('turnoAtivo');
+  if(typeof fbSalvarTurnoAtivo === 'function') fbSalvarTurnoAtivo(null);
   turnoAtivo = null;
   atualizarStatusTurno();
 }
@@ -1761,6 +1945,7 @@ function salvarRegistro(){
 
   registros.unshift(reg);
   localStorage.setItem('supervisorRegistros', JSON.stringify(registros));
+  if(typeof fbSalvarRegistro === 'function') fbSalvarRegistro(reg);
   showToast('💾 Vistoria salva com sucesso!');
   atualizarStats();
 }
@@ -1822,6 +2007,7 @@ function excluir(id){
   if(!confirm('Excluir este registro?')) return;
   registros = registros.filter(r=>r.id!==id);
   localStorage.setItem('supervisorRegistros', JSON.stringify(registros));
+  if(typeof fbExcluirRegistro === 'function') fbExcluirRegistro(id);
   renderRelatorio();
   atualizarStats();
 }
@@ -1910,6 +2096,7 @@ function excluirBanco(id){
   if(!confirm('Excluir este registro?')) return;
   registros = registros.filter(r=>r.id!==id);
   localStorage.setItem('supervisorRegistros', JSON.stringify(registros));
+  if(typeof fbExcluirRegistro === 'function') fbExcluirRegistro(id);
   renderBanco();
   atualizarStats();
 }
@@ -1918,6 +2105,7 @@ function excluirTurno(id){
   if(!confirm('Excluir este turno?')) return;
   turnos = turnos.filter(t=>t.id!==id);
   localStorage.setItem('supervisorTurnos', JSON.stringify(turnos));
+  if(typeof fbExcluirTurno === 'function') fbExcluirTurno(id);
   renderTurnosBanco();
   renderHistoricoTurnos();
   atualizarStats();
@@ -1926,6 +2114,9 @@ function excluirTurno(id){
 function limparTodosBanco(){
   if(!confirm('ATENÇÃO: Isso irá excluir TODOS os registros de vistorias. Deseja continuar?')) return;
   if(!confirm('Tem certeza absoluta? Esta ação não pode ser desfeita.')) return;
+  // Excluir do Firebase
+  const ids = registros.map(r => r.id);
+  if(typeof fbExcluirRegistro === 'function') ids.forEach(id => fbExcluirRegistro(id));
   registros = [];
   localStorage.setItem('supervisorRegistros', JSON.stringify(registros));
   renderBanco();
@@ -2085,6 +2276,7 @@ function salvarVeiculos(veiculos){
   // manter vtrPlacas sincronizado (usado pelo turno)
   placas = veiculos.map(v => v.placa);
   localStorage.setItem('vtrPlacas', JSON.stringify(placas));
+  if(typeof fbSalvarVeiculos === 'function') fbSalvarVeiculos(veiculos);
   atualizarSelectPlacas();
   atualizarStats();
 }
@@ -2143,6 +2335,7 @@ function adicionarCadastro(tipo, inputId){
   items.push(val);
   items.sort((a,b) => a.localeCompare(b, 'pt-BR'));
   localStorage.setItem(CADS[tipo].key, JSON.stringify(items));
+  if(typeof fbSalvarCad === 'function') fbSalvarCad(tipo, items);
   inp.value = '';
   renderCadLista(tipo);
   atualizarSelectsFormulario();
@@ -2166,6 +2359,7 @@ function removerCadastroNome(tipo, nome){
   if(idx === -1) return;
   items.splice(idx, 1);
   localStorage.setItem(CADS[tipo].key, JSON.stringify(items));
+  if(typeof fbSalvarCad === 'function') fbSalvarCad(tipo, items);
   renderCadLista(tipo);
   atualizarSelectsFormulario();
 }
@@ -2355,4 +2549,3 @@ function showToast(msg){
 </script>
 </body>
 </html>
-
