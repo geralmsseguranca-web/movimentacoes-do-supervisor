@@ -53,6 +53,24 @@
     catch(e){ console.warn('Firebase del registros:', e); }
   };
 
+  // ── Listener em tempo real para Registros ──
+  function iniciarListenerRegistros(){
+    return onSnapshot(
+      query(collection(db,'registros'), orderBy('data','desc')),
+      (snap) => {
+        const arr = snap.docs.map(d => d.data());
+        localStorage.setItem('supervisorRegistros', JSON.stringify(arr));
+        window.registros = arr;
+        if(typeof renderBanco === 'function') renderBanco();
+        if(typeof renderRelatorio === 'function') renderRelatorio();
+        if(typeof atualizarStats === 'function') atualizarStats();
+        if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+      },
+      (e) => console.warn('Firebase listener registros:', e)
+    );
+  }
+
+  // mantém compatibilidade com chamadas manuais existentes
   window.fbCarregarRegistros = async function(){
     try {
       const snap = await getDocs(query(collection(db,'registros'), orderBy('data','desc')));
@@ -80,6 +98,22 @@
     catch(e){ console.warn('Firebase del turnos:', e); }
   };
 
+  // ── Listener em tempo real para Turnos ──
+  function iniciarListenerTurnos(){
+    return onSnapshot(
+      query(collection(db,'turnos'), orderBy('dataIni','desc')),
+      (snap) => {
+        const arr = snap.docs.map(d => d.data());
+        localStorage.setItem('supervisorTurnos', JSON.stringify(arr));
+        window.turnos = arr;
+        if(typeof renderHistoricoTurnos === 'function') renderHistoricoTurnos();
+        if(typeof renderTurnosBanco === 'function') renderTurnosBanco();
+        if(typeof atualizarStats === 'function') atualizarStats();
+      },
+      (e) => console.warn('Firebase listener turnos:', e)
+    );
+  }
+
   window.fbCarregarTurnos = async function(){
     try {
       const snap = await getDocs(query(collection(db,'turnos'), orderBy('dataIni','desc')));
@@ -92,13 +126,34 @@
     } catch(e){ console.warn('Firebase load turnos:', e); }
   };
 
+  // ══════════════════════════════════
   // TURNO ATIVO (documento único)
+  // ══════════════════════════════════
   window.fbSalvarTurnoAtivo = async function(turno){
     try {
       if(turno) await setDoc(doc(db,'meta','turnoAtivo'), turno);
       else       await deleteDoc(doc(db,'meta','turnoAtivo'));
     } catch(e){ console.warn('Firebase turnoAtivo:', e); }
   };
+
+  // ── Listener em tempo real para Turno Ativo ──
+  function iniciarListenerTurnoAtivo(){
+    return onSnapshot(
+      doc(db,'meta','turnoAtivo'),
+      (snap) => {
+        if(snap.exists()){
+          const t = snap.data();
+          localStorage.setItem('turnoAtivo', JSON.stringify(t));
+          window.turnoAtivo = t;
+        } else {
+          localStorage.removeItem('turnoAtivo');
+          window.turnoAtivo = null;
+        }
+        if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+      },
+      (e) => console.warn('Firebase listener turnoAtivo:', e)
+    );
+  }
 
   window.fbCarregarTurnoAtivo = async function(){
     try {
@@ -120,6 +175,23 @@
       await setDoc(doc(db,'cadastros', tipo), { items: arr });
     } catch(e){ console.warn('Firebase write cad:', e); }
   };
+
+  // ── Listener em tempo real para cada Cadastro ──
+  function iniciarListenerCad(tipo){
+    return onSnapshot(
+      doc(db,'cadastros', tipo),
+      (snap) => {
+        if(!snap.exists()) return;
+        const arr = snap.data().items || [];
+        if(window.CADS && window.CADS[tipo]){
+          localStorage.setItem(window.CADS[tipo].key, JSON.stringify(arr));
+        }
+        if(typeof atualizarSelectsFormulario === 'function') atualizarSelectsFormulario();
+        if(typeof renderCadLista === 'function') renderCadLista(tipo);
+      },
+      (e) => console.warn(`Firebase listener cad ${tipo}:`, e)
+    );
+  }
 
   window.fbCarregarCads = async function(){
     try {
@@ -149,6 +221,24 @@
     } catch(e){ console.warn('Firebase write veiculos:', e); }
   };
 
+  // ── Listener em tempo real para Veículos ──
+  function iniciarListenerVeiculos(){
+    return onSnapshot(
+      doc(db,'cadastros','veiculos'),
+      (snap) => {
+        if(!snap.exists()) return;
+        const arr = snap.data().items || [];
+        localStorage.setItem('cadVeiculos', JSON.stringify(arr));
+        const placas = arr.map(v => v.placa);
+        localStorage.setItem('vtrPlacas', JSON.stringify(placas));
+        window.placas = placas;
+        if(typeof atualizarSelectPlacas === 'function') atualizarSelectPlacas();
+        if(typeof renderVeiculosLista === 'function') renderVeiculosLista();
+      },
+      (e) => console.warn('Firebase listener veiculos:', e)
+    );
+  }
+
   window.fbCarregarVeiculos = async function(){
     try {
       const snap = await getDoc(doc(db,'cadastros','veiculos'));
@@ -165,21 +255,28 @@
   };
 
   // ══════════════════════════════════
-  // INICIALIZAÇÃO — carrega tudo do Firebase ao abrir
+  // INICIALIZAÇÃO — ativa todos os listeners em tempo real
   // ══════════════════════════════════
   window.addEventListener('load', async () => {
     setOnlineStatus(navigator.onLine);
     // aguarda o app principal inicializar
     await new Promise(r => setTimeout(r, 300));
-    await Promise.all([
-      window.fbCarregarRegistros(),
-      window.fbCarregarTurnos(),
-      window.fbCarregarTurnoAtivo(),
-      window.fbCarregarCads(),
-      window.fbCarregarVeiculos(),
-    ]);
+
+    // Ativa listeners em tempo real (onSnapshot) para todas as coleções.
+    // Cada listener dispara imediatamente com os dados atuais e depois
+    // atualiza automaticamente a cada mudança no Firestore.
+    window._unsubscribers = [
+      iniciarListenerRegistros(),
+      iniciarListenerTurnos(),
+      iniciarListenerTurnoAtivo(),
+      iniciarListenerCad('supervisores'),
+      iniciarListenerCad('colaboradores'),
+      iniciarListenerCad('postos'),
+      iniciarListenerVeiculos(),
+    ];
+
     window._fbReady = true;
-    if(typeof showToast === 'function') showToast('☁️ Dados sincronizados com Firebase!');
+    if(typeof showToast === 'function') showToast('☁️ Sincronização em tempo real ativa!');
   });
 </script>
 <style>
