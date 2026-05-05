@@ -1,0 +1,2358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Movimentações do Supervisor</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --surface: #111720;
+    --surface2: #181f2b;
+    --surface3: #1e2738;
+    --border: #252e3f;
+    --accent: #e8a838;
+    --accent2: #f0c060;
+    --danger: #e05c5c;
+    --ok: #3fb68a;
+    --info: #4a9eff;
+    --text: #dde4ee;
+    --muted: #6b7894;
+    --radius: 7px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .shield-icon { font-size: 22px; }
+  header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  header p { font-size: 0.66rem; color: var(--muted); margin-top: 1px; }
+  #clock { font-family: 'Rajdhani', sans-serif; font-size: 0.9rem; color: var(--accent2); margin-left: auto; white-space: nowrap; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab-btn {
+    flex: 1;
+    min-width: 90px;
+    padding: 9px 6px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    transition: all .2s;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  .tab-btn:hover { color: var(--text); background: var(--surface2); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(232,168,56,.04); }
+
+  /* LAYOUT */
+  .main { padding: 14px 12px 80px; max-width: 800px; margin: 0 auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 13px 14px;
+    margin-bottom: 10px;
+  }
+  .card-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .card-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px;
+    height: 12px;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* FORM FIELDS */
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .row.full { grid-template-columns: 1fr; }
+  .row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .row.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  label {
+    font-size: 0.66rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 0.82rem;
+    padding: 7px 10px;
+    transition: border-color .2s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  select { cursor: pointer; }
+  textarea { resize: vertical; min-height: 56px; }
+
+  /* STATUS BADGE */
+  .status-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .status-opt { display: none; }
+  .status-opt + label {
+    padding: 5px 12px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all .2s;
+    letter-spacing: 0.4px;
+  }
+  .status-opt:checked + label { border-color: var(--accent); background: rgba(232,168,56,.13); color: var(--accent2); }
+
+  /* CHECKLIST */
+  .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .check-item { display: flex; align-items: center; gap: 8px; }
+  .check-item input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); flex-shrink: 0; cursor: pointer; padding: 0; }
+  .check-item label { font-size: 0.78rem; text-transform: none; letter-spacing: 0; color: var(--text); cursor: pointer; }
+
+  /* ITEM AVALIADO */
+  .item-avaliado {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 10px;
+    margin-bottom: 7px;
+  }
+  .item-avaliado .item-header {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+  .rating-row { display: flex; gap: 5px; flex-wrap: wrap; }
+  .rating-opt { display: none; }
+  .rating-opt + label {
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    text-transform: uppercase;
+  }
+  .rating-ok + label { color: var(--ok); }
+  .rating-ok:checked + label { background: rgba(63,182,138,.18); border-color: var(--ok); }
+  .rating-at + label { color: var(--accent); }
+  .rating-at:checked + label { background: rgba(232,168,56,.18); border-color: var(--accent); }
+  .rating-ng + label { color: var(--danger); }
+  .rating-ng:checked + label { background: rgba(224,92,92,.18); border-color: var(--danger); }
+  .rating-na + label { color: var(--muted); }
+  .rating-na:checked + label { background: rgba(107,120,148,.13); border-color: var(--muted); }
+
+  /* FOTO */
+  .foto-area {
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s;
+    position: relative;
+    margin-top: 7px;
+  }
+  .foto-area:hover { border-color: var(--accent); }
+  .foto-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .foto-area .icon { font-size: 20px; margin-bottom: 3px; }
+  .foto-area p { font-size: 0.7rem; color: var(--muted); }
+  .foto-previews { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+  .foto-previews img { width: 58px; height: 58px; object-fit: cover; border-radius: 5px; border: 1px solid var(--border); }
+
+  /* KM BANNER */
+  .km-banner {
+    background: linear-gradient(90deg, rgba(63,182,138,.1), rgba(63,182,138,.04));
+    border: 1px solid rgba(63,182,138,.35);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ok);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .km-banner span { font-size: 1.1rem; font-weight: 700; color: #fff; }
+
+  /* KM TURNO CARD — destaque visual */
+  .km-turno-card {
+    background: linear-gradient(135deg, var(--surface2) 0%, var(--surface3) 100%);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .km-turno-card .km-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .km-display {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .km-box {
+    flex: 1;
+    min-width: 100px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .km-box .km-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+  .km-box .km-val { font-family: 'Rajdhani', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--text); }
+  .km-box.km-diff-box { border-color: var(--accent); }
+  .km-box.km-diff-box .km-val { color: var(--accent2); }
+  .km-arrow { color: var(--muted); font-size: 1rem; }
+
+  /* RELATÓRIO */
+  .relatorio-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  .relatorio-table th {
+    background: var(--surface2);
+    padding: 7px 8px;
+    text-align: left;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .relatorio-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: middle;
+  }
+  .relatorio-table tr:hover td { background: var(--surface2); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .badge-ok { background: rgba(63,182,138,.13); color: var(--ok); border: 1px solid rgba(63,182,138,.4); }
+  .badge-at { background: rgba(232,168,56,.13); color: var(--accent2); border: 1px solid rgba(232,168,56,.4); }
+  .badge-ng { background: rgba(224,92,92,.13); color: var(--danger); border: 1px solid rgba(224,92,92,.4); }
+  .badge-nd { background: rgba(107,120,148,.1); color: var(--muted); border: 1px solid var(--border); }
+
+  .empty-state { text-align: center; padding: 32px 20px; color: var(--muted); font-size: 0.82rem; }
+  .empty-state .big { font-size: 30px; margin-bottom: 8px; }
+
+  /* BUTTONS */
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .btn {
+    padding: 9px 18px;
+    border-radius: 5px;
+    border: none;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-primary { background: var(--accent); color: #0a0e14; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-success { background: var(--ok); color: #0a0e14; }
+  .btn-success:hover { filter: brightness(1.1); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+  .btn-danger:hover { background: rgba(224,92,92,.08); }
+  .btn-sm { padding: 4px 10px; font-size: 0.72rem; }
+  .btn-info { background: transparent; border: 1px solid var(--info); color: var(--info); }
+  .btn-info:hover { background: rgba(74,158,255,.08); }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--ok);
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 20px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    letter-spacing: 0.4px;
+    transition: transform .3s;
+    z-index: 200;
+    pointer-events: none;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* MODAL */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+  .modal-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+  }
+
+  /* BANCO DE DADOS */
+  .db-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stat-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    text-align: center;
+  }
+  .stat-box .stat-val {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent2);
+  }
+  .stat-box .stat-lbl { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+
+  .db-filters {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+  .db-filters input, .db-filters select {
+    flex: 1;
+    min-width: 120px;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+  .db-filters .btn { padding: 6px 12px; font-size: 0.75rem; }
+
+  .db-table { width: 100%; border-collapse: collapse; font-size: 0.76rem; min-width: 600px; }
+  .db-table th {
+    background: var(--surface2);
+    padding: 6px 8px;
+    text-align: left;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  .db-table th:hover { color: var(--accent); }
+  .db-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .db-table tr:hover td { background: var(--surface2); }
+  .db-table tr.selected td { background: rgba(232,168,56,.06); }
+
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+
+  .db-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+  .db-info { font-size: 0.72rem; color: var(--muted); margin-left: auto; }
+
+  /* CADASTROS */
+  .cad-tab {
+    flex: 1;
+    padding: 8px 6px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    transition: all .2s;
+    border-right: 1px solid var(--border);
+  }
+  .cad-tab:last-child { border-right: none; }
+  .cad-tab:hover { background: var(--surface2); color: var(--text); }
+  .cad-tab.active { background: rgba(232,168,56,.1); color: var(--accent); }
+
+  .cad-lista { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+  .cad-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 7px 10px;
+  }
+  .cad-item .cad-nome { font-size: 0.85rem; font-weight: 500; }
+  .cad-item .cad-sub { font-size: 0.68rem; color: var(--muted); margin-top: 1px; }
+  .cad-item button { background: none; border: none; color: var(--danger); font-size: 1rem; cursor: pointer; padding: 2px 4px; flex-shrink: 0; }
+  .cad-empty { font-size: 0.78rem; color: var(--muted); text-align: center; padding: 14px 0; }
+
+  /* DETALHE MODAL */
+  .detalhe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .detalhe-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px; }
+  .detalhe-item .d-lbl { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+  .detalhe-item .d-val { font-size: 0.82rem; color: var(--text); font-weight: 500; }
+  .detalhe-section { font-family: 'Rajdhani', sans-serif; font-size: 0.78rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px; margin: 12px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+
+  /* KM TURNO FLOW */
+  .turno-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .turno-status.aberto { background: rgba(232,168,56,.1); border: 1px solid rgba(232,168,56,.4); color: var(--accent2); }
+  .turno-status.encerrado { background: rgba(63,182,138,.1); border: 1px solid rgba(63,182,138,.4); color: var(--ok); }
+  .turno-status.sem-turno { background: rgba(107,120,148,.08); border: 1px solid var(--border); color: var(--muted); }
+
+  /* ── INSPEÇÃO DIURNA ── */
+  .insp-toggle-btn {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(74,158,255,.08), rgba(74,158,255,.04));
+    border: 1px dashed rgba(74,158,255,.45);
+    border-radius: var(--radius);
+    color: var(--info);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 11px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all .2s;
+    margin-bottom: 10px;
+  }
+  .insp-toggle-btn:hover { background: rgba(74,158,255,.13); border-color: var(--info); }
+  .insp-toggle-btn .insp-arrow { margin-left: auto; transition: transform .3s; font-size: 0.8rem; }
+  .insp-toggle-btn.open .insp-arrow { transform: rotate(180deg); }
+  .insp-toggle-btn .insp-badge {
+    background: rgba(74,158,255,.18);
+    color: var(--info);
+    border: 1px solid rgba(74,158,255,.4);
+    border-radius: 10px;
+    font-size: 0.62rem;
+    padding: 1px 7px;
+    margin-left: 4px;
+  }
+
+  .insp-panel {
+    display: none;
+    animation: fadeInDown .25s ease;
+  }
+  .insp-panel.open { display: block; }
+
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .insp-local {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .insp-local-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    background: var(--surface3);
+    border-bottom: 1px solid transparent;
+    transition: background .2s;
+    user-select: none;
+  }
+  .insp-local-header:hover { background: rgba(232,168,56,.07); }
+  .insp-local-header .insp-local-arrow { margin-left: auto; font-size: 0.7rem; transition: transform .25s; color: var(--muted); }
+  .insp-local-header.open { border-bottom-color: var(--border); }
+  .insp-local-header.open .insp-local-arrow { transform: rotate(180deg); }
+
+  .insp-local-body { display: none; padding: 10px 12px 12px; }
+  .insp-local-body.open { display: block; }
+
+  .insp-status-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+  .insp-status-opt { display: none; }
+  .insp-status-opt + label {
+    padding: 4px 11px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all .2s;
+    letter-spacing: 0.3px;
+  }
+  .insp-s-ok + label { color: var(--ok); }
+  .insp-s-ok:checked + label { background: rgba(63,182,138,.18); border-color: var(--ok); color: var(--ok); }
+  .insp-s-at + label { color: var(--accent); }
+  .insp-s-at:checked + label { background: rgba(232,168,56,.18); border-color: var(--accent); color: var(--accent2); }
+  .insp-s-ng + label { color: var(--danger); }
+  .insp-s-ng:checked + label { background: rgba(224,92,92,.18); border-color: var(--danger); color: var(--danger); }
+  .insp-s-na + label { color: var(--muted); }
+  .insp-s-na:checked + label { background: rgba(107,120,148,.13); border-color: var(--muted); }
+
+  .insp-foto-area {
+    border: 1px dashed rgba(74,158,255,.35);
+    border-radius: var(--radius);
+    padding: 9px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s;
+    position: relative;
+    margin-top: 7px;
+    background: rgba(74,158,255,.03);
+  }
+  .insp-foto-area:hover { border-color: var(--info); }
+  .insp-foto-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .insp-foto-area .icon { font-size: 18px; margin-bottom: 2px; }
+  .insp-foto-area p { font-size: 0.67rem; color: var(--muted); }
+  .insp-foto-previews { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .insp-foto-previews img { width: 54px; height: 54px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); }
+
+  @media (max-width: 520px) {
+    .row { grid-template-columns: 1fr; }
+    .row.three { grid-template-columns: 1fr 1fr; }
+    .row.four { grid-template-columns: 1fr 1fr; }
+    .check-grid { grid-template-columns: 1fr; }
+    .db-stats { grid-template-columns: repeat(2, 1fr); }
+    .detalhe-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="shield-icon">🛡️</div>
+  <div>
+    <h1>Movimentações do Supervisor</h1>
+    <p>Segurança Privada — Portaria · Zeladoria · Serviços Gerais · Vigia</p>
+  </div>
+  <div id="clock"></div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('turno',this)">🚗 Turno / KM</button>
+  <button class="tab-btn" onclick="showTab('vistoria',this)">📋 Vistoria</button>
+  <button class="tab-btn" onclick="showTab('relatorio',this)">📊 Relatório</button>
+  <button class="tab-btn" onclick="showTab('banco',this)">🗄️ Banco de Dados</button>
+</div>
+
+<div class="main">
+
+<!-- ══════════ TAB TURNO / KM ══════════ -->
+<div id="tab-turno" class="tab-panel active">
+
+  <!-- STATUS DO TURNO ATUAL -->
+  <div id="turno-status-bar" class="turno-status sem-turno">⏸ Nenhum turno em aberto</div>
+
+  <!-- ABERTURA DE TURNO -->
+  <div class="km-turno-card" id="card-abertura">
+    <div class="km-title">🟢 Abertura de Turno</div>
+
+    <!-- Linha 1: Supervisor + Data + Hora -->
+    <div class="row three">
+      <div class="field">
+        <label>Supervisor</label>
+        <select id="t_supervisor">
+          <option value="">— Selecione —</option>
+          <option>Carlos Silva</option>
+          <option>Marcos Oliveira</option>
+          <option>Ana Lima</option>
+          <option>Roberto Santos</option>
+          <option>Fernanda Costa</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Data Início</label>
+        <input type="date" id="t_data_ini">
+      </div>
+      <div class="field">
+        <label>Hora Início</label>
+        <input type="time" id="t_hora_ini">
+      </div>
+    </div>
+
+    <!-- Linha 2: Placa + Tipo -->
+    <div class="row">
+      <div class="field">
+        <label>Placa da VTR</label>
+        <div style="display:flex;gap:6px;">
+          <select id="t_placa" style="flex:1">
+            <option value="">— Selecione —</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="abrirModalPlacas()" style="white-space:nowrap;padding:7px 10px" title="Gerenciar placas">⚙️</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tipo VTR</label>
+        <select id="t_tipo">
+          <option value="">— Selecione —</option>
+          <option>Carro</option>
+          <option>Moto</option>
+          <option>Van</option>
+          <option>Caminhonete</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Linha 3: KM + Obs -->
+    <div class="row">
+      <div class="field">
+        <label>KM Inicial (odômetro ao sair)</label>
+        <input type="number" id="t_km_ini" placeholder="Ex.: 12450" min="0" style="font-size:1.05rem;font-weight:700;letter-spacing:0.5px;">
+      </div>
+      <div class="field">
+        <label>Observação Inicial</label>
+        <input type="text" id="t_obs_ini" placeholder="Estado da VTR, nível de combustível...">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="abrirTurno()" style="flex:1;justify-content:center;display:flex;align-items:center;gap:6px;font-size:0.92rem;">
+        🟢 Abrir Turno
+      </button>
+    </div>
+  </div>
+
+  <!-- TURNO ABERTO - ENCERRAMENTO -->
+  <div id="card-encerramento" style="display:none;">
+    <div class="km-turno-card" style="border-color:var(--ok);">
+      <div class="km-title" style="color:var(--ok);">🔴 Encerramento de Turno</div>
+
+      <!-- Resumo do turno aberto -->
+      <div id="resumo-turno" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:10px;font-size:0.8rem;"></div>
+
+      <div class="row">
+        <div class="field">
+          <label>Data Encerramento</label>
+          <input type="date" id="t_data_fim">
+        </div>
+        <div class="field">
+          <label>Hora Encerramento</label>
+          <input type="time" id="t_hora_fim">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>KM Final (odômetro ao retornar)</label>
+          <input type="number" id="t_km_fim" placeholder="Ex.: 12530" min="0" oninput="calcKmPreview()" style="font-size:1.05rem;font-weight:700;letter-spacing:0.5px;">
+        </div>
+        <div class="field">
+          <label>Observação Final</label>
+          <input type="text" id="t_obs_fim" placeholder="Ocorrências, nível de combustível...">
+        </div>
+      </div>
+
+      <div id="km-preview" style="display:none" class="km-display">
+        <div class="km-box"><div class="km-label">KM Inicial</div><div class="km-val" id="kp_ini">—</div></div>
+        <div class="km-arrow">→</div>
+        <div class="km-box"><div class="km-label">KM Final</div><div class="km-val" id="kp_fim">—</div></div>
+        <div class="km-arrow">=</div>
+        <div class="km-box km-diff-box"><div class="km-label">Percorridos</div><div class="km-val" id="kp_diff">—</div></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="encerrarTurno()" style="flex:1;justify-content:center;display:flex;align-items:center;gap:6px;">🔴 Encerrar Turno</button>
+        <button class="btn btn-outline" onclick="cancelarAbertura()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MINI STATS DO TURNO -->
+  <div id="turno-mini-stats" style="display:none;margin-bottom:10px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+      <div class="stat-box"><div class="stat-val" id="ts-total">0</div><div class="stat-lbl">Vistorias</div></div>
+      <div class="stat-box"><div class="stat-val" id="ts-km">—</div><div class="stat-lbl">KM Percorridos</div></div>
+      <div class="stat-box"><div class="stat-val" id="ts-turnos">0</div><div class="stat-lbl">Turnos</div></div>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO DE TURNOS -->
+  <div class="card">
+    <div class="card-title">📋 Histórico de Turnos</div>
+    <!-- Botões de exportação -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="btn btn-outline btn-sm" onclick="exportarTurnosPDF()" style="border-color:var(--danger);color:var(--danger);">📄 PDF</button>
+      <button class="btn btn-outline btn-sm" onclick="exportarTurnosExcel()" style="border-color:var(--ok);color:var(--ok);">📊 Excel</button>
+    </div>
+    <div id="historico-turnos">
+      <div class="empty-state"><div class="big">🚗</div><p>Nenhum turno registrado ainda.</p></div>
+    </div>
+  </div>
+
+</div><!-- /tab-turno -->
+
+
+<!-- ══════════ TAB VISTORIA ══════════ -->
+<div id="tab-vistoria" class="tab-panel">
+
+  <!-- IDENTIFICAÇÃO -->
+  <div class="card">
+    <div class="card-title">Identificação</div>
+    <div class="row">
+      <div class="field">
+        <label>Posto / Local</label>
+        <select id="posto">
+          <option value="">— Selecione —</option>
+          <option>Portaria Principal</option>
+          <option>Portaria Secundária</option>
+          <option>Bloco A</option>
+          <option>Bloco B</option>
+          <option>Área Externa</option>
+          <option>Zeladoria</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Supervisor Responsável</label>
+        <select id="supervisor">
+          <option value="">— Selecione —</option>
+          <option>Carlos Silva</option>
+          <option>Marcos Oliveira</option>
+          <option>Ana Lima</option>
+          <option>Roberto Santos</option>
+          <option>Fernanda Costa</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Colaborador Vistoriado</label>
+        <select id="colaborador">
+          <option value="">— Selecione —</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Função</label>
+        <select id="funcao">
+          <option value="">— Selecione —</option>
+          <option>Porteiro</option>
+          <option>Vigia</option>
+          <option>Zelador</option>
+          <option>Serviços Gerais</option>
+          <option>Recepcionista</option>
+        </select>
+      </div>
+    </div>
+    <div class="row three">
+      <div class="field">
+        <label>Data da Visita</label>
+        <input type="date" id="data_visita">
+      </div>
+      <div class="field">
+        <label>Horário</label>
+        <input type="time" id="hora_visita">
+      </div>
+      <div class="field">
+        <label>Turno</label>
+        <select id="turno">
+          <option value="">— Selecione —</option>
+          <option>Diurno (06h–18h)</option>
+          <option>Noturno (18h–06h)</option>
+          <option>12x36 Dia</option>
+          <option>12x36 Noite</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNIFORME -->
+  <div class="card">
+    <div class="card-title">Uniforme do Colaborador</div>
+    <div class="check-grid">
+      <div class="check-item"><input type="checkbox" id="u1"><label for="u1">Camisa/Camiseta padrão</label></div>
+      <div class="check-item"><input type="checkbox" id="u2"><label for="u2">Calça padrão</label></div>
+      <div class="check-item"><input type="checkbox" id="u3"><label for="u3">Colete/jaqueta</label></div>
+      <div class="check-item"><input type="checkbox" id="u4"><label for="u4">Sapato/bota adequado</label></div>
+      <div class="check-item"><input type="checkbox" id="u5"><label for="u5">Crachá visível</label></div>
+      <div class="check-item"><input type="checkbox" id="u6"><label for="u6">Uniforme limpo e passado</label></div>
+      <div class="check-item"><input type="checkbox" id="u7"><label for="u7">Boné/quepe (se aplicável)</label></div>
+      <div class="check-item"><input type="checkbox" id="u8"><label for="u8">EPI em uso (se aplicável)</label></div>
+    </div>
+    <div class="field" style="margin-top:8px;">
+      <label>Observação — Uniforme</label>
+      <textarea id="obs_uniforme" placeholder="Descreva irregularidades..."></textarea>
+    </div>
+  </div>
+
+  <!-- RONDA -->
+  <div class="card">
+    <div class="card-title">Ronda</div>
+    <div class="row">
+      <div class="field">
+        <label>Ronda realizada?</label>
+        <select id="ronda_ok">
+          <option value="">— Selecione —</option>
+          <option>Sim — Conforme</option>
+          <option>Sim — Com ressalvas</option>
+          <option>Não realizada</option>
+          <option>Não aplicável</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Frequência</label>
+        <select id="ronda_freq">
+          <option value="">— Selecione —</option>
+          <option>A cada 30 min</option>
+          <option>A cada 1 hora</option>
+          <option>A cada 2 horas</option>
+          <option>Conforme escala</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Observação — Ronda</label>
+      <textarea id="obs_ronda" placeholder="Ocorrências ou irregularidades..."></textarea>
+    </div>
+  </div>
+
+  <!-- EQUIPAMENTOS -->
+  <div class="card">
+    <div class="card-title">Equipamentos e Instalações</div>
+
+    <div class="item-avaliado">
+      <div class="item-header">💻 Computador (PC)</div>
+      <div class="rating-row">
+        <input class="rating-opt rating-ok" type="radio" name="pc" id="pc_ok" value="OK"><label for="pc_ok">OK</label>
+        <input class="rating-opt rating-at" type="radio" name="pc" id="pc_at" value="Atenção"><label for="pc_at">Atenção</label>
+        <input class="rating-opt rating-ng" type="radio" name="pc" id="pc_ng" value="Inoperante"><label for="pc_ng">Inoperante</label>
+        <input class="rating-opt rating-na" type="radio" name="pc" id="pc_na" value="N/A"><label for="pc_na">N/A</label>
+      </div>
+    </div>
+
+    <div class="item-avaliado">
+      <div class="item-header">📹 Câmeras de Segurança</div>
+      <div class="rating-row">
+        <input class="rating-opt rating-ok" type="radio" name="cameras" id="cam_ok" value="OK"><label for="cam_ok">OK</label>
+        <input class="rating-opt rating-at" type="radio" name="cameras" id="cam_at" value="Atenção"><label for="cam_at">Atenção</label>
+        <input class="rating-opt rating-ng" type="radio" name="cameras" id="cam_ng" value="Com falha"><label for="cam_ng">Com falha</label>
+        <input class="rating-opt rating-na" type="radio" name="cameras" id="cam_na" value="N/A"><label for="cam_na">N/A</label>
+      </div>
+    </div>
+
+    <div class="item-avaliado">
+      <div class="item-header">🚧 Cancela</div>
+      <div class="rating-row">
+        <input class="rating-opt rating-ok" type="radio" name="cancela" id="can_ok" value="OK"><label for="can_ok">OK</label>
+        <input class="rating-opt rating-at" type="radio" name="cancela" id="can_at" value="Atenção"><label for="can_at">Atenção</label>
+        <input class="rating-opt rating-ng" type="radio" name="cancela" id="can_ng" value="Inoperante"><label for="can_ng">Inoperante</label>
+        <input class="rating-opt rating-na" type="radio" name="cancela" id="can_na" value="N/A"><label for="can_na">N/A</label>
+      </div>
+    </div>
+
+    <div class="item-avaliado">
+      <div class="item-header">🧊 Geladeira / ♨️ Micro-ondas</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:0.65rem;color:var(--muted);margin-bottom:4px;">GELADEIRA</div>
+          <div class="rating-row">
+            <input class="rating-opt rating-ok" type="radio" name="geladeira" id="gel_ok" value="OK"><label for="gel_ok">OK</label>
+            <input class="rating-opt rating-at" type="radio" name="geladeira" id="gel_at" value="Atenção"><label for="gel_at">Atenção</label>
+            <input class="rating-opt rating-ng" type="radio" name="geladeira" id="gel_ng" value="Com defeito"><label for="gel_ng">Defeito</label>
+            <input class="rating-opt rating-na" type="radio" name="geladeira" id="gel_na" value="N/A"><label for="gel_na">N/A</label>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:0.65rem;color:var(--muted);margin-bottom:4px;">MICRO-ONDAS</div>
+          <div class="rating-row">
+            <input class="rating-opt rating-ok" type="radio" name="microondas" id="mic_ok" value="OK"><label for="mic_ok">OK</label>
+            <input class="rating-opt rating-at" type="radio" name="microondas" id="mic_at" value="Atenção"><label for="mic_at">Atenção</label>
+            <input class="rating-opt rating-ng" type="radio" name="microondas" id="mic_ng" value="Com defeito"><label for="mic_ng">Defeito</label>
+            <input class="rating-opt rating-na" type="radio" name="microondas" id="mic_na" value="N/A"><label for="mic_na">N/A</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIATURA DO POSTO -->
+  <div class="card">
+    <div class="card-title">Viatura do Posto</div>
+    <div class="row">
+      <div class="field">
+        <label>Tipo de Viatura</label>
+        <select id="viatura_tipo">
+          <option value="">— Selecione —</option>
+          <option>Carro</option>
+          <option>Moto</option>
+          <option>Van</option>
+          <option>Não aplicável</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Placa / Identificação</label>
+        <input type="text" id="viatura_placa" placeholder="Ex.: ABC-1234">
+      </div>
+    </div>
+    <div class="item-avaliado" style="margin-top:0;">
+      <div class="item-header">Estado Geral</div>
+      <div class="rating-row">
+        <input class="rating-opt rating-ok" type="radio" name="viatura_posto" id="vp_ok" value="OK"><label for="vp_ok">OK</label>
+        <input class="rating-opt rating-at" type="radio" name="viatura_posto" id="vp_at" value="Atenção"><label for="vp_at">Atenção</label>
+        <input class="rating-opt rating-ng" type="radio" name="viatura_posto" id="vp_ng" value="Com problemas"><label for="vp_ng">Com problemas</label>
+        <input class="rating-opt rating-na" type="radio" name="viatura_posto" id="vp_na" value="N/A"><label for="vp_na">N/A</label>
+      </div>
+    </div>
+    <div class="field" style="margin-top:8px;">
+      <label>Observações — Viatura do Posto</label>
+      <textarea id="obs_viatura_posto" placeholder="Avarias, combustível, documentação..."></textarea>
+    </div>
+  </div>
+
+  <!-- ══ INSPEÇÃO DIURNA (colapsável) ══ -->
+  <button class="insp-toggle-btn" id="btn-insp-diurna" onclick="toggleInspDiurna()">
+    ☀️ Inspeção Diurna — Áreas Comuns
+    <span class="insp-badge">Supervisor Diurno</span>
+    <span class="insp-arrow">▼</span>
+  </button>
+
+  <div class="insp-panel" id="panel-insp-diurna">
+
+    <!-- HALL DE ENTRADA -->
+    <div class="insp-local">
+      <div class="insp-local-header" onclick="toggleInspLocal('hall')">
+        🚪 Hall de Entrada / Recepção
+        <span class="insp-local-arrow" id="arrow-hall">▼</span>
+      </div>
+      <div class="insp-local-body" id="body-hall">
+        <label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Status do Local</label>
+        <div class="insp-status-row">
+          <input class="insp-status-opt insp-s-ok" type="radio" name="insp_hall" id="hall_ok" value="OK"><label for="hall_ok">✅ Conforme</label>
+          <input class="insp-status-opt insp-s-at" type="radio" name="insp_hall" id="hall_at" value="Atenção"><label for="hall_at">⚠️ Atenção</label>
+          <input class="insp-status-opt insp-s-ng" type="radio" name="insp_hall" id="hall_ng" value="Irregular"><label for="hall_ng">🔴 Irregular</label>
+          <input class="insp-status-opt insp-s-na" type="radio" name="insp_hall" id="hall_na" value="N/A"><label for="hall_na">N/A</label>
+        </div>
+        <div class="check-grid" style="margin-bottom:8px;">
+          <div class="check-item"><input type="checkbox" id="hall_c1"><label for="hall_c1">Limpeza e organização</label></div>
+          <div class="check-item"><input type="checkbox" id="hall_c2"><label for="hall_c2">Iluminação adequada</label></div>
+          <div class="check-item"><input type="checkbox" id="hall_c3"><label for="hall_c3">Controle de acesso funcionando</label></div>
+          <div class="check-item"><input type="checkbox" id="hall_c4"><label for="hall_c4">Câmeras visíveis e operando</label></div>
+          <div class="check-item"><input type="checkbox" id="hall_c5"><label for="hall_c5">Interfone / campainha OK</label></div>
+          <div class="check-item"><input type="checkbox" id="hall_c6"><label for="hall_c6">Ausência de objetos irregulares</label></div>
+        </div>
+        <div class="field">
+          <label>Observações — Hall</label>
+          <textarea id="obs_hall" placeholder="Registre irregularidades, avarias, solicitações..." style="min-height:50px;"></textarea>
+        </div>
+        <div class="insp-foto-area" onclick="document.getElementById('foto_hall').click()">
+          <input type="file" id="foto_hall" accept="image/*" multiple capture="environment" onchange="previewInspFoto(this,'prev_hall')">
+          <div class="icon">📷</div>
+          <p>Toque para fotografar o Hall</p>
+        </div>
+        <div class="insp-foto-previews" id="prev_hall"></div>
+      </div>
+    </div>
+
+    <!-- ÁREA DE LAZER -->
+    <div class="insp-local">
+      <div class="insp-local-header" onclick="toggleInspLocal('lazer')">
+        🏊 Área de Lazer (Piscina / Salão / Churrasqueira)
+        <span class="insp-local-arrow" id="arrow-lazer">▼</span>
+      </div>
+      <div class="insp-local-body" id="body-lazer">
+        <label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Status do Local</label>
+        <div class="insp-status-row">
+          <input class="insp-status-opt insp-s-ok" type="radio" name="insp_lazer" id="lazer_ok" value="OK"><label for="lazer_ok">✅ Conforme</label>
+          <input class="insp-status-opt insp-s-at" type="radio" name="insp_lazer" id="lazer_at" value="Atenção"><label for="lazer_at">⚠️ Atenção</label>
+          <input class="insp-status-opt insp-s-ng" type="radio" name="insp_lazer" id="lazer_ng" value="Irregular"><label for="lazer_ng">🔴 Irregular</label>
+          <input class="insp-status-opt insp-s-na" type="radio" name="insp_lazer" id="lazer_na" value="N/A"><label for="lazer_na">N/A</label>
+        </div>
+        <div class="check-grid" style="margin-bottom:8px;">
+          <div class="check-item"><input type="checkbox" id="lazer_c1"><label for="lazer_c1">Limpeza geral da área</label></div>
+          <div class="check-item"><input type="checkbox" id="lazer_c2"><label for="lazer_c2">Piscina limpa / tratada</label></div>
+          <div class="check-item"><input type="checkbox" id="lazer_c3"><label for="lazer_c3">Mobiliário em bom estado</label></div>
+          <div class="check-item"><input type="checkbox" id="lazer_c4"><label for="lazer_c4">Iluminação funcionando</label></div>
+          <div class="check-item"><input type="checkbox" id="lazer_c5"><label for="lazer_c5">Churrasqueira / salão em ordem</label></div>
+          <div class="check-item"><input type="checkbox" id="lazer_c6"><label for="lazer_c6">Câmeras operando</label></div>
+          <div class="check-item"><input type="checkbox" id="lazer_c7"><label for="lazer_c7">Acesso restrito/controlado</label></div>
+          <div class="check-item"><input type="checkbox" id="lazer_c8"><label for="lazer_c8">Sem ocupação indevida</label></div>
+        </div>
+        <div class="field">
+          <label>Observações — Área de Lazer</label>
+          <textarea id="obs_lazer" placeholder="Descreva irregularidades, avarias, uso indevido..." style="min-height:50px;"></textarea>
+        </div>
+        <div class="insp-foto-area" onclick="document.getElementById('foto_lazer').click()">
+          <input type="file" id="foto_lazer" accept="image/*" multiple capture="environment" onchange="previewInspFoto(this,'prev_lazer')">
+          <div class="icon">📷</div>
+          <p>Toque para fotografar a Área de Lazer</p>
+        </div>
+        <div class="insp-foto-previews" id="prev_lazer"></div>
+      </div>
+    </div>
+
+    <!-- GARAGEM / ESTACIONAMENTO -->
+    <div class="insp-local">
+      <div class="insp-local-header" onclick="toggleInspLocal('garagem')">
+        🅿️ Garagem / Estacionamento
+        <span class="insp-local-arrow" id="arrow-garagem">▼</span>
+      </div>
+      <div class="insp-local-body" id="body-garagem">
+        <label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Status do Local</label>
+        <div class="insp-status-row">
+          <input class="insp-status-opt insp-s-ok" type="radio" name="insp_garagem" id="gar_ok" value="OK"><label for="gar_ok">✅ Conforme</label>
+          <input class="insp-status-opt insp-s-at" type="radio" name="insp_garagem" id="gar_at" value="Atenção"><label for="gar_at">⚠️ Atenção</label>
+          <input class="insp-status-opt insp-s-ng" type="radio" name="insp_garagem" id="gar_ng" value="Irregular"><label for="gar_ng">🔴 Irregular</label>
+          <input class="insp-status-opt insp-s-na" type="radio" name="insp_garagem" id="gar_na" value="N/A"><label for="gar_na">N/A</label>
+        </div>
+        <div class="check-grid" style="margin-bottom:8px;">
+          <div class="check-item"><input type="checkbox" id="gar_c1"><label for="gar_c1">Organização das vagas</label></div>
+          <div class="check-item"><input type="checkbox" id="gar_c2"><label for="gar_c2">Sinalização legível</label></div>
+          <div class="check-item"><input type="checkbox" id="gar_c3"><label for="gar_c3">Iluminação adequada</label></div>
+          <div class="check-item"><input type="checkbox" id="gar_c4"><label for="gar_c4">Ausência de veículos irregulares</label></div>
+          <div class="check-item"><input type="checkbox" id="gar_c5"><label for="gar_c5">Cancela / portão operando</label></div>
+          <div class="check-item"><input type="checkbox" id="gar_c6"><label for="gar_c6">Câmeras operando</label></div>
+        </div>
+        <div class="field">
+          <label>Observações — Garagem</label>
+          <textarea id="obs_garagem" placeholder="Veículos irregulares, avarias, ocorrências..." style="min-height:50px;"></textarea>
+        </div>
+        <div class="insp-foto-area" onclick="document.getElementById('foto_garagem').click()">
+          <input type="file" id="foto_garagem" accept="image/*" multiple capture="environment" onchange="previewInspFoto(this,'prev_garagem')">
+          <div class="icon">📷</div>
+          <p>Toque para fotografar a Garagem</p>
+        </div>
+        <div class="insp-foto-previews" id="prev_garagem"></div>
+      </div>
+    </div>
+
+    <!-- CORREDOR / CIRCULAÇÃO -->
+    <div class="insp-local">
+      <div class="insp-local-header" onclick="toggleInspLocal('corredor')">
+        🚶 Corredores / Circulação Interna
+        <span class="insp-local-arrow" id="arrow-corredor">▼</span>
+      </div>
+      <div class="insp-local-body" id="body-corredor">
+        <label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Status do Local</label>
+        <div class="insp-status-row">
+          <input class="insp-status-opt insp-s-ok" type="radio" name="insp_corredor" id="cor_ok" value="OK"><label for="cor_ok">✅ Conforme</label>
+          <input class="insp-status-opt insp-s-at" type="radio" name="insp_corredor" id="cor_at" value="Atenção"><label for="cor_at">⚠️ Atenção</label>
+          <input class="insp-status-opt insp-s-ng" type="radio" name="insp_corredor" id="cor_ng" value="Irregular"><label for="cor_ng">🔴 Irregular</label>
+          <input class="insp-status-opt insp-s-na" type="radio" name="insp_corredor" id="cor_na" value="N/A"><label for="cor_na">N/A</label>
+        </div>
+        <div class="check-grid" style="margin-bottom:8px;">
+          <div class="check-item"><input type="checkbox" id="cor_c1"><label for="cor_c1">Limpeza e organização</label></div>
+          <div class="check-item"><input type="checkbox" id="cor_c2"><label for="cor_c2">Iluminação funcionando</label></div>
+          <div class="check-item"><input type="checkbox" id="cor_c3"><label for="cor_c3">Saídas de emergência livres</label></div>
+          <div class="check-item"><input type="checkbox" id="cor_c4"><label for="cor_c4">Ausência de objetos no corredor</label></div>
+        </div>
+        <div class="field">
+          <label>Observações — Corredores</label>
+          <textarea id="obs_corredor" placeholder="Obstruções, avarias, ocorrências..." style="min-height:50px;"></textarea>
+        </div>
+        <div class="insp-foto-area" onclick="document.getElementById('foto_corredor').click()">
+          <input type="file" id="foto_corredor" accept="image/*" multiple capture="environment" onchange="previewInspFoto(this,'prev_corredor')">
+          <div class="icon">📷</div>
+          <p>Toque para fotografar os Corredores</p>
+        </div>
+        <div class="insp-foto-previews" id="prev_corredor"></div>
+      </div>
+    </div>
+
+    <!-- LOCAL PERSONALIZADO -->
+    <div class="insp-local">
+      <div class="insp-local-header" onclick="toggleInspLocal('outro')">
+        📍 Outro Local / Área Específica
+        <span class="insp-local-arrow" id="arrow-outro">▼</span>
+      </div>
+      <div class="insp-local-body" id="body-outro">
+        <div class="field" style="margin-bottom:8px;">
+          <label>Nome do Local</label>
+          <input type="text" id="outro_nome" placeholder="Ex.: Salão de Festas, Playground, Cobertura...">
+        </div>
+        <label style="font-size:0.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;">Status do Local</label>
+        <div class="insp-status-row">
+          <input class="insp-status-opt insp-s-ok" type="radio" name="insp_outro" id="out_ok" value="OK"><label for="out_ok">✅ Conforme</label>
+          <input class="insp-status-opt insp-s-at" type="radio" name="insp_outro" id="out_at" value="Atenção"><label for="out_at">⚠️ Atenção</label>
+          <input class="insp-status-opt insp-s-ng" type="radio" name="insp_outro" id="out_ng" value="Irregular"><label for="out_ng">🔴 Irregular</label>
+          <input class="insp-status-opt insp-s-na" type="radio" name="insp_outro" id="out_na" value="N/A"><label for="out_na">N/A</label>
+        </div>
+        <div class="field" style="margin-top:4px;">
+          <label>Observações</label>
+          <textarea id="obs_outro" placeholder="Descreva a situação do local..." style="min-height:56px;"></textarea>
+        </div>
+        <div class="insp-foto-area" onclick="document.getElementById('foto_outro').click()">
+          <input type="file" id="foto_outro" accept="image/*" multiple capture="environment" onchange="previewInspFoto(this,'prev_outro')">
+          <div class="icon">📷</div>
+          <p>Toque para fotografar o local</p>
+        </div>
+        <div class="insp-foto-previews" id="prev_outro"></div>
+      </div>
+    </div>
+
+  </div><!-- /panel-insp-diurna -->
+
+  <!-- OCORRÊNCIAS -->
+  <div class="card">
+    <div class="card-title">Ocorrências e Observações Gerais</div>
+    <div class="field">
+      <label>Situação Geral do Posto</label>
+      <select id="situacao_geral">
+        <option value="">— Selecione —</option>
+        <option>✅ Conforme — Sem pendências</option>
+        <option>⚠️ Conforme — Com ressalvas</option>
+        <option>🔴 Inconformidades graves</option>
+        <option>🔄 Aguardando regularização</option>
+      </select>
+    </div>
+    <div class="field" style="margin-top:8px;">
+      <label>Observações Gerais / Ocorrências</label>
+      <textarea id="obs_geral" placeholder="Registre ocorrências relevantes, solicitações, pendências..." style="min-height:70px;"></textarea>
+    </div>
+    <div class="field" style="margin-top:8px;">
+      <label>Providências / Ações Determinadas</label>
+      <textarea id="providencias" placeholder="Ações a serem tomadas, prazos, responsáveis..." style="min-height:56px;"></textarea>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="salvarRegistro()">💾 Salvar Vistoria</button>
+    <button class="btn btn-outline" onclick="limparForm()">🗑️ Limpar</button>
+  </div>
+
+</div><!-- /tab-vistoria -->
+
+
+<!-- ══════════ TAB RELATÓRIO ══════════ -->
+<div id="tab-relatorio" class="tab-panel">
+  <div class="card">
+    <div class="card-title">Relatório de Vistorias</div>
+    <div id="relatorio-wrap">
+      <div class="empty-state"><div class="big">📋</div><p>Nenhum registro salvo ainda.</p></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════ TAB BANCO DE DADOS ══════════ -->
+<div id="tab-banco" class="tab-panel">
+
+  <!-- STATS -->
+  <div class="db-stats" id="db-stats">
+    <div class="stat-box"><div class="stat-val" id="s-total">0</div><div class="stat-lbl">Vistorias</div></div>
+    <div class="stat-box"><div class="stat-val" id="s-turnos">0</div><div class="stat-lbl">Turnos</div></div>
+    <div class="stat-box"><div class="stat-val" id="s-km">0</div><div class="stat-lbl">KM Total</div></div>
+    <div class="stat-box"><div class="stat-val" id="s-placas">0</div><div class="stat-lbl">Placas</div></div>
+  </div>
+
+  <!-- FILTROS VISTORIAS -->
+  <div class="card">
+    <div class="card-title">📋 Vistorias Salvas</div>
+    <div class="db-filters">
+      <input type="text" id="db-busca" placeholder="🔍 Buscar posto, supervisor, colaborador..." oninput="filtrarBanco()">
+      <select id="db-filtro-sit" onchange="filtrarBanco()">
+        <option value="">Todas situações</option>
+        <option value="Conforme">✅ Conforme</option>
+        <option value="ressalvas">⚠️ Ressalvas</option>
+        <option value="grave">🔴 Grave</option>
+      </select>
+      <button class="btn btn-outline btn-sm" onclick="exportarVistoriasPDF()" style="border-color:var(--danger);color:var(--danger);">📄 PDF</button>
+      <button class="btn btn-outline btn-sm" onclick="exportarCSV()" style="border-color:var(--ok);color:var(--ok);">📊 Excel</button>
+      <button class="btn btn-danger btn-sm" onclick="limparTodosBanco()">🗑️ Limpar</button>
+    </div>
+    <div class="table-wrap">
+      <table class="db-table">
+        <thead>
+          <tr>
+            <th onclick="sortBanco('data')">Data ↕</th>
+            <th onclick="sortBanco('posto')">Posto ↕</th>
+            <th>Supervisor</th>
+            <th>Colaborador</th>
+            <th>VTR / KM</th>
+            <th>Situação</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="db-tbody"></tbody>
+      </table>
+    </div>
+    <div class="db-actions">
+      <span id="db-count" class="db-info">0 registros</span>
+    </div>
+  </div>
+
+  <!-- TURNOS -->
+  <div class="card">
+    <div class="card-title">🚗 Turnos / Controle de KM</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="btn btn-outline btn-sm" onclick="exportarTurnosPDF()" style="border-color:var(--danger);color:var(--danger);">📄 PDF</button>
+      <button class="btn btn-outline btn-sm" onclick="exportarTurnosExcel()" style="border-color:var(--ok);color:var(--ok);">📊 Excel</button>
+    </div>
+    <div class="table-wrap">
+      <table class="db-table">
+        <thead>
+          <tr>
+            <th>Data Abertura</th>
+            <th>Supervisor</th>
+            <th>VTR / Placa</th>
+            <th>KM Ini</th>
+            <th>KM Fim</th>
+            <th>Percorrido</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="turnos-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ─── CADASTROS ─── -->
+  <div class="card">
+    <div class="card-title">⚙️ Cadastros</div>
+    <p style="font-size:0.72rem;color:var(--muted);margin-bottom:12px;">Gerencie os itens que aparecem nos menus do formulário. Alterações refletem imediatamente nos selects.</p>
+
+    <!-- SUB-TABS CADASTRO -->
+    <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:14px;flex-wrap:wrap;">
+      <button class="cad-tab active" id="ctab-sup" onclick="showCadTab('supervisores',this)">👤 Supervisores</button>
+      <button class="cad-tab" id="ctab-col" onclick="showCadTab('colaboradores',this)">🧑‍💼 Colaboradores</button>
+      <button class="cad-tab" id="ctab-pos" onclick="showCadTab('postos',this)">📍 Postos</button>
+      <button class="cad-tab" id="ctab-vtr" onclick="showCadTab('veiculos',this)">🚗 Veículos / Placas</button>
+    </div>
+
+    <!-- SUPERVISORES -->
+    <div id="cpanel-supervisores" class="cad-panel">
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <input type="text" id="inp-supervisor" placeholder="Nome do supervisor..." style="flex:1;">
+        <button class="btn btn-primary btn-sm" style="padding:7px 14px;" onclick="adicionarCadastro('supervisores','inp-supervisor')">+ Adicionar</button>
+      </div>
+      <div id="lista-supervisores" class="cad-lista"></div>
+    </div>
+
+    <!-- COLABORADORES -->
+    <div id="cpanel-colaboradores" class="cad-panel" style="display:none;">
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <input type="text" id="inp-colaborador" placeholder="Nome do colaborador..." style="flex:1;">
+        <button class="btn btn-primary btn-sm" style="padding:7px 14px;" onclick="adicionarCadastro('colaboradores','inp-colaborador')">+ Adicionar</button>
+      </div>
+      <div id="lista-colaboradores" class="cad-lista"></div>
+    </div>
+
+    <!-- POSTOS -->
+    <div id="cpanel-postos" class="cad-panel" style="display:none;">
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <input type="text" id="inp-posto" placeholder="Nome do posto / local..." style="flex:1;">
+        <button class="btn btn-primary btn-sm" style="padding:7px 14px;" onclick="adicionarCadastro('postos','inp-posto')">+ Adicionar</button>
+      </div>
+      <div id="lista-postos" class="cad-lista"></div>
+    </div>
+
+    <!-- VEÍCULOS / PLACAS -->
+    <div id="cpanel-veiculos" class="cad-panel" style="display:none;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+        <input type="text" id="inp-placa" placeholder="Placa (Ex.: ABC-1D23)" style="flex:1;min-width:120px;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+        <select id="inp-vtr-tipo" style="flex:1;min-width:110px;">
+          <option value="">Tipo —</option>
+          <option>Carro</option>
+          <option>Moto</option>
+          <option>Van</option>
+          <option>Caminhonete</option>
+        </select>
+        <button class="btn btn-primary btn-sm" style="padding:7px 14px;" onclick="adicionarVeiculo()">+ Adicionar</button>
+      </div>
+      <div id="lista-veiculos" class="cad-lista"></div>
+    </div>
+  </div>
+
+</div><!-- /tab-banco -->
+
+</div><!-- /main -->
+
+<!-- MODAL GERENCIAR PLACAS -->
+<div id="modal-placas" class="modal-bg">
+  <div class="modal-box">
+    <div class="modal-title">⚙️ Gerenciar Placas VTR</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;">
+      <input type="text" id="nova_placa_input" placeholder="Ex.: ABC-1D23" style="flex:1;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+      <button class="btn btn-primary btn-sm" style="padding:7px 14px;" onclick="adicionarPlaca()">+ Adicionar</button>
+    </div>
+    <div id="lista-placas-modal"></div>
+    <div style="margin-top:16px;text-align:right;">
+      <button class="btn btn-outline" onclick="fecharModalPlacas()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHE VISTORIA -->
+<div id="modal-detalhe" class="modal-bg">
+  <div class="modal-box" style="max-width:560px;">
+    <div class="modal-title">📋 Detalhes da Vistoria</div>
+    <div id="detalhe-content"></div>
+    <div style="margin-top:16px;text-align:right;">
+      <button class="btn btn-outline" onclick="fecharModalDetalhe()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast">✅ Salvo com sucesso!</div>
+
+<script>
+// ══════════════════════════════════════════
+// CLOCK
+// ══════════════════════════════════════════
+function updateClock(){
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+updateClock(); setInterval(updateClock,1000);
+
+// ══════════════════════════════════════════
+// DEFAULTS
+// ══════════════════════════════════════════
+window.addEventListener('load', () => {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0,10);
+  const timeStr = now.toTimeString().slice(0,5);
+  document.getElementById('data_visita').value = dateStr;
+  document.getElementById('hora_visita').value = timeStr;
+  document.getElementById('t_data_ini').value = dateStr;
+  document.getElementById('t_hora_ini').value = timeStr;
+  document.getElementById('t_data_fim').value = dateStr;
+  document.getElementById('t_hora_fim').value = timeStr;
+  atualizarSelectPlacas();
+  renderHistoricoTurnos();
+  atualizarStatusTurno();
+  renderTurnosBanco();
+  renderBanco();
+  atualizarStats();
+  // Inicializar selects com cadastros (será chamado novamente pelo listener capture, mas não faz mal)
+});
+
+// ══════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════
+function showTab(id, btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  else document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.textContent.includes(id)) b.classList.add('active'); });
+  if(id==='relatorio') renderRelatorio();
+  if(id==='banco') { renderBanco(); renderTurnosBanco(); atualizarStats(); renderCadLista('supervisores'); renderCadLista('colaboradores'); renderCadLista('postos'); renderVeiculosLista(); }
+}
+
+// ══════════════════════════════════════════
+// PLACAS
+// ══════════════════════════════════════════
+let placas = JSON.parse(localStorage.getItem('vtrPlacas') || '[]');
+
+function atualizarSelectPlacas(){
+  ['vtr_placa','t_placa'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const atual = sel.value;
+    sel.innerHTML = '<option value="">— Selecione a placa —</option>';
+    placas.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p; opt.textContent = p;
+      sel.appendChild(opt);
+    });
+    if(atual) sel.value = atual;
+  });
+}
+
+function renderListaPlacasModal(){
+  const div = document.getElementById('lista-placas-modal');
+  if(!placas.length){
+    div.innerHTML = '<p style="color:var(--muted);font-size:.8rem;text-align:center;padding:10px 0;">Nenhuma placa cadastrada.</p>';
+    return;
+  }
+  div.innerHTML = placas.map((p,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:8px 10px;margin-bottom:6px;">
+      <span style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:1px;">${p}</span>
+      <button onclick="removerPlaca(${i})" style="background:none;border:none;color:var(--danger);font-size:1rem;cursor:pointer;">🗑️</button>
+    </div>`).join('');
+}
+
+function adicionarPlaca(){
+  const inp = document.getElementById('nova_placa_input');
+  const val = inp.value.trim().toUpperCase();
+  if(!val){ alert('Digite a placa.'); return; }
+  if(placas.includes(val)){ alert('Placa já cadastrada.'); return; }
+  placas.push(val);
+  localStorage.setItem('vtrPlacas', JSON.stringify(placas));
+  inp.value = '';
+  atualizarSelectPlacas();
+  renderListaPlacasModal();
+  atualizarStats();
+}
+
+function removerPlaca(i){
+  if(!confirm(`Remover a placa "${placas[i]}"?`)) return;
+  placas.splice(i,1);
+  localStorage.setItem('vtrPlacas', JSON.stringify(placas));
+  atualizarSelectPlacas();
+  renderListaPlacasModal();
+  atualizarStats();
+}
+
+function abrirModalPlacas(){
+  renderListaPlacasModal();
+  document.getElementById('modal-placas').classList.add('open');
+}
+function fecharModalPlacas(){
+  document.getElementById('modal-placas').classList.remove('open');
+}
+document.getElementById('modal-placas').addEventListener('click',function(e){
+  if(e.target===this) fecharModalPlacas();
+});
+
+// ══════════════════════════════════════════
+// TURNO / KM
+// ══════════════════════════════════════════
+let turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
+let turnoAtivo = JSON.parse(localStorage.getItem('turnoAtivo') || 'null');
+
+function atualizarStatusTurno(){
+  const bar = document.getElementById('turno-status-bar');
+  const cardAb = document.getElementById('card-abertura');
+  const cardEnc = document.getElementById('card-encerramento');
+  const miniStats = document.getElementById('turno-mini-stats');
+
+  // Atualizar mini stats
+  const tList = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
+  const regList = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+  const totalKm = tList.reduce((s,t)=>s+(t.kmPercorrido||0),0);
+  if(document.getElementById('ts-total')) document.getElementById('ts-total').textContent = regList.length;
+  if(document.getElementById('ts-km')) document.getElementById('ts-km').textContent = totalKm ? totalKm.toLocaleString('pt-BR')+' km' : '—';
+  if(document.getElementById('ts-turnos')) document.getElementById('ts-turnos').textContent = tList.length;
+  if(miniStats) miniStats.style.display = (tList.length || regList.length) ? 'block' : 'none';
+
+  if(turnoAtivo){
+    bar.className = 'turno-status aberto';
+    bar.innerHTML = `🟢 Turno ABERTO — ${turnoAtivo.supervisor} · ${turnoAtivo.placa} · KM Ini: <strong>${turnoAtivo.kmIni}</strong> · Início: ${turnoAtivo.dataIni} ${turnoAtivo.horaIni}`;
+    cardAb.style.display = 'none';
+    cardEnc.style.display = 'block';
+    document.getElementById('resumo-turno').innerHTML = `
+      <strong style="color:var(--accent2)">${turnoAtivo.supervisor}</strong> &nbsp;|&nbsp;
+      VTR: <strong>${turnoAtivo.placa}</strong> (${turnoAtivo.tipo||'—'}) &nbsp;|&nbsp;
+      Saída: <strong>${turnoAtivo.dataIni} ${turnoAtivo.horaIni}</strong> &nbsp;|&nbsp;
+      KM Ini: <strong style="color:var(--ok)">${turnoAtivo.kmIni}</strong>
+      ${turnoAtivo.obsIni ? `<br><span style="color:var(--muted);font-size:0.75rem">Obs: ${turnoAtivo.obsIni}</span>` : ''}
+    `;
+  } else {
+    bar.className = 'turno-status sem-turno';
+    bar.innerHTML = '⏸ Nenhum turno em aberto — Abra um turno para iniciar a ronda.';
+    cardAb.style.display = 'block';
+    cardEnc.style.display = 'none';
+  }
+}
+
+function abrirTurno(){
+  const supervisor = document.getElementById('t_supervisor').value;
+  const placa = document.getElementById('t_placa').value;
+  const kmIni = parseInt(document.getElementById('t_km_ini').value)||0;
+  const dataIni = document.getElementById('t_data_ini').value;
+  const horaIni = document.getElementById('t_hora_ini').value;
+
+  if(!supervisor){ alert('Selecione o supervisor.'); return; }
+  if(!placa){ alert('Selecione a placa da VTR.'); return; }
+  if(!kmIni){ alert('Informe o KM inicial.'); return; }
+  if(!dataIni || !horaIni){ alert('Informe data e hora de início.'); return; }
+
+  turnoAtivo = {
+    id: Date.now(),
+    supervisor,
+    placa,
+    tipo: document.getElementById('t_tipo').value,
+    kmIni,
+    dataIni,
+    horaIni,
+    obsIni: document.getElementById('t_obs_ini').value,
+  };
+  localStorage.setItem('turnoAtivo', JSON.stringify(turnoAtivo));
+  atualizarStatusTurno();
+  showToast('🟢 Turno aberto com sucesso!');
+}
+
+function encerrarTurno(){
+  if(!turnoAtivo){ alert('Nenhum turno ativo.'); return; }
+  const kmFim = parseInt(document.getElementById('t_km_fim').value)||0;
+  const dataFim = document.getElementById('t_data_fim').value;
+  const horaFim = document.getElementById('t_hora_fim').value;
+
+  if(!kmFim){ alert('Informe o KM final.'); return; }
+  if(kmFim <= turnoAtivo.kmIni){ alert('KM Final deve ser maior que KM Inicial.'); return; }
+  if(!dataFim || !horaFim){ alert('Informe data e hora de encerramento.'); return; }
+
+  const turnoCompleto = {
+    ...turnoAtivo,
+    kmFim,
+    dataFim,
+    horaFim,
+    kmPercorrido: kmFim - turnoAtivo.kmIni,
+    obsFim: document.getElementById('t_obs_fim').value,
+    status: 'encerrado',
+  };
+
+  turnos.unshift(turnoCompleto);
+  localStorage.setItem('supervisorTurnos', JSON.stringify(turnos));
+  localStorage.removeItem('turnoAtivo');
+  turnoAtivo = null;
+
+  // Limpar campos encerramento
+  document.getElementById('t_km_fim').value = '';
+  document.getElementById('t_obs_fim').value = '';
+  document.getElementById('km-preview').style.display = 'none';
+
+  atualizarStatusTurno();
+  renderHistoricoTurnos();
+  atualizarStats();
+  showToast('🔴 Turno encerrado! KM: ' + turnoCompleto.kmPercorrido + ' km');
+}
+
+function cancelarAbertura(){
+  if(!confirm('Cancelar a abertura de turno? Os dados serão perdidos.')) return;
+  localStorage.removeItem('turnoAtivo');
+  turnoAtivo = null;
+  atualizarStatusTurno();
+}
+
+function calcKmPreview(){
+  const ini = turnoAtivo ? turnoAtivo.kmIni : 0;
+  const fim = parseInt(document.getElementById('t_km_fim').value)||0;
+  const box = document.getElementById('km-preview');
+  if(ini > 0 && fim > ini){
+    document.getElementById('kp_ini').textContent = ini.toLocaleString('pt-BR');
+    document.getElementById('kp_fim').textContent = fim.toLocaleString('pt-BR');
+    document.getElementById('kp_diff').textContent = (fim - ini).toLocaleString('pt-BR') + ' km';
+    box.style.display = 'flex';
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+function renderHistoricoTurnos(){
+  const wrap = document.getElementById('historico-turnos');
+  if(!turnos.length){
+    wrap.innerHTML = '<div class="empty-state"><div class="big">🚗</div><p>Nenhum turno registrado ainda.</p></div>';
+    return;
+  }
+  wrap.innerHTML = turnos.slice(0,10).map(t => {
+    const aberto = t.status !== 'encerrado';
+    const duracao = (t.dataIni && t.horaIni && t.dataFim && t.horaFim) ? (() => {
+      const ini = new Date(t.dataIni+'T'+t.horaIni);
+      const fim = new Date(t.dataFim+'T'+t.horaFim);
+      const diff = Math.round((fim-ini)/60000);
+      if(isNaN(diff)||diff<0) return null;
+      const h = Math.floor(diff/60), m = diff%60;
+      return `${h}h${m>0?m+'min':''}`;
+    })() : null;
+    return `
+    <div style="background:var(--surface2);border:1px solid ${aberto?'rgba(232,168,56,.5)':'var(--border)'};border-radius:8px;padding:11px 13px;margin-bottom:8px;">
+      <!-- Cabeçalho -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;font-weight:700;color:var(--text);flex:1;min-width:120px;">${t.supervisor}</div>
+        <span class="badge ${aberto?'badge-at':'badge-ok'}">${aberto?'🟢 Aberto':'✅ Encerrado'}</span>
+      </div>
+      <!-- Detalhes em grade -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px;">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;text-align:center;">
+          <div style="font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">VTR / Placa</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:0.9rem;font-weight:700;color:var(--accent2);">🚗 ${t.placa}</div>
+          <div style="font-size:0.62rem;color:var(--muted);">${t.tipo||'—'}</div>
+        </div>
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;text-align:center;">
+          <div style="font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">Abertura</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;font-weight:600;">${t.dataIni||'—'}</div>
+          <div style="font-size:0.7rem;color:var(--muted);">${t.horaIni||''}</div>
+        </div>
+        ${!aberto ? `<div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;text-align:center;">
+          <div style="font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">Encerramento</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;font-weight:600;">${t.dataFim||'—'}</div>
+          <div style="font-size:0.7rem;color:var(--muted);">${t.horaFim||''}</div>
+        </div>` : ''}
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;text-align:center;">
+          <div style="font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">KM Ini → Fim</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;font-weight:600;">${(t.kmIni||0).toLocaleString('pt-BR')} → ${t.kmFim?t.kmFim.toLocaleString('pt-BR'):'—'}</div>
+        </div>
+        ${t.kmPercorrido ? `<div style="background:rgba(63,182,138,.07);border:1px solid rgba(63,182,138,.3);border-radius:5px;padding:6px 8px;text-align:center;">
+          <div style="font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">Percorrido</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:var(--ok);">📏 ${t.kmPercorrido} km</div>
+          ${duracao?`<div style="font-size:0.62rem;color:var(--muted);">⏱ ${duracao}</div>`:''}
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  if(turnos.length > 10) wrap.innerHTML += `<p style="font-size:0.72rem;color:var(--muted);text-align:center;margin-top:6px;">Exibindo últimos 10 de ${turnos.length} turnos. Ver todos no Banco de Dados.</p>`;
+}
+
+// ══════════════════════════════════════════
+// KM CALC (vistoria)
+// ══════════════════════════════════════════
+function calcKm(){
+  const ini = parseInt(document.getElementById('vtr_km_ini').value)||0;
+  const fim = parseInt(document.getElementById('vtr_km_fim').value)||0;
+  const box = document.getElementById('km_resultado');
+  if(ini > 0 && fim > ini){
+    document.getElementById('km_ini_show').textContent = ini.toLocaleString('pt-BR');
+    document.getElementById('km_fim_show').textContent = fim.toLocaleString('pt-BR');
+    document.getElementById('km_diff').textContent = (fim-ini).toLocaleString('pt-BR')+' km';
+    box.style.display = 'flex';
+  } else {
+    box.style.display = 'none';
+  }
+}
+
+// ══════════════════════════════════════════
+// SALVAR VISTORIA
+// ══════════════════════════════════════════
+let registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+
+function getRadioVal(name){ const r=document.querySelector(`input[name="${name}"]:checked`); return r?r.value:''; }
+
+function salvarRegistro(){
+  const posto = document.getElementById('posto').value;
+  const supervisor = document.getElementById('supervisor').value;
+  const data = document.getElementById('data_visita').value;
+
+  if(!posto || !supervisor || !data){
+    alert('Preencha pelo menos: Posto, Supervisor e Data.');
+    return;
+  }
+
+  const reg = {
+    id: Date.now(),
+    data,
+    hora: document.getElementById('hora_visita').value,
+    posto, supervisor,
+    colaborador: document.getElementById('colaborador').value,
+    funcao: document.getElementById('funcao').value,
+    turno: document.getElementById('turno').value,
+    situacao: document.getElementById('situacao_geral').value,
+    ronda: document.getElementById('ronda_ok').value,
+    pc: getRadioVal('pc'),
+    cameras: getRadioVal('cameras'),
+    cancela: getRadioVal('cancela'),
+    geladeira: getRadioVal('geladeira'),
+    microondas: getRadioVal('microondas'),
+    viatura: getRadioVal('viatura_posto'),
+    viaturaTipo: document.getElementById('viatura_tipo').value,
+    obs_geral: document.getElementById('obs_geral').value,
+    providencias: document.getElementById('providencias').value,
+    turnoId: turnoAtivo ? turnoAtivo.id : null,
+  };
+
+  registros.unshift(reg);
+  localStorage.setItem('supervisorRegistros', JSON.stringify(registros));
+  showToast('💾 Vistoria salva com sucesso!');
+  atualizarStats();
+}
+
+function limparForm(){
+  if(!confirm('Limpar todos os campos?')) return;
+  document.querySelectorAll('#tab-vistoria input[type=text],#tab-vistoria input[type=date],#tab-vistoria input[type=time],#tab-vistoria input[type=number],#tab-vistoria textarea').forEach(el=>el.value='');
+  document.querySelectorAll('#tab-vistoria select').forEach(el=>el.selectedIndex=0);
+  document.querySelectorAll('#tab-vistoria input[type=checkbox]').forEach(el=>el.checked=false);
+  document.querySelectorAll('#tab-vistoria input[type=radio]').forEach(el=>el.checked=false);
+  const now = new Date();
+  document.getElementById('data_visita').value = now.toISOString().slice(0,10);
+  document.getElementById('hora_visita').value = now.toTimeString().slice(0,5);
+}
+
+// ══════════════════════════════════════════
+// RELATÓRIO
+// ══════════════════════════════════════════
+function badgeSit(val){
+  if(!val) return '<span class="badge badge-nd">—</span>';
+  if(val.includes('✅')) return `<span class="badge badge-ok">Conforme</span>`;
+  if(val.includes('⚠️')) return `<span class="badge badge-at">Ressalvas</span>`;
+  if(val.includes('🔴')) return `<span class="badge badge-ng">Grave</span>`;
+  return `<span class="badge badge-at">${val}</span>`;
+}
+
+function renderRelatorio(){
+  const wrap = document.getElementById('relatorio-wrap');
+  registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+  if(!registros.length){
+    wrap.innerHTML=`<div class="empty-state"><div class="big">📋</div><p>Nenhum registro salvo ainda.</p></div>`;
+    return;
+  }
+  let html = `<div style="overflow-x:auto;"><table class="relatorio-table">
+    <thead><tr>
+      <th>Data / Hora</th><th>Posto</th><th>Colaborador</th>
+      <th>Supervisor</th><th>Situação</th><th>Ações</th>
+    </tr></thead><tbody>`;
+  registros.forEach(r=>{
+    const dataFmt = r.data ? new Date(r.data+'T12:00').toLocaleDateString('pt-BR') : '—';
+    html += `<tr>
+      <td><strong>${dataFmt}</strong><br><span style="color:var(--muted);font-size:.72rem">${r.hora||'—'}</span></td>
+      <td>${r.posto||'—'}</td>
+      <td>${r.colaborador||'—'}<br><span style="color:var(--muted);font-size:.72rem">${r.funcao||''}</span></td>
+      <td>${r.supervisor||'—'}</td>
+      <td>${badgeSit(r.situacao)}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-outline btn-sm" onclick="verDetalhes(${r.id})">📄</button>
+        <button class="btn btn-danger btn-sm" onclick="excluir(${r.id})">🗑️</button>
+      </td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+  html += `<p style="margin-top:8px;font-size:.72rem;color:var(--muted);">Total: <strong style="color:var(--accent2)">${registros.length}</strong> registros</p>`;
+  wrap.innerHTML = html;
+}
+
+function excluir(id){
+  if(!confirm('Excluir este registro?')) return;
+  registros = registros.filter(r=>r.id!==id);
+  localStorage.setItem('supervisorRegistros', JSON.stringify(registros));
+  renderRelatorio();
+  atualizarStats();
+}
+
+// ══════════════════════════════════════════
+// BANCO DE DADOS
+// ══════════════════════════════════════════
+let dbSort = {col:'data', dir:-1};
+
+function renderBanco(){
+  registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+  const busca = (document.getElementById('db-busca')?.value||'').toLowerCase();
+  const filtSit = document.getElementById('db-filtro-sit')?.value||'';
+
+  let dados = registros.filter(r => {
+    const txt = ((r.posto||'')+(r.supervisor||'')+(r.colaborador||'')+(r.vtrPlaca||'')).toLowerCase();
+    const sitOk = !filtSit ||
+      (filtSit==='Conforme' && r.situacao && r.situacao.includes('✅')) ||
+      (filtSit==='ressalvas' && r.situacao && r.situacao.includes('⚠️')) ||
+      (filtSit==='grave' && r.situacao && r.situacao.includes('🔴'));
+    return txt.includes(busca) && sitOk;
+  });
+
+  // Sort
+  dados.sort((a,b) => {
+    let va = a[dbSort.col]||'', vb = b[dbSort.col]||'';
+    return va < vb ? -dbSort.dir : va > vb ? dbSort.dir : 0;
+  });
+
+  const tbody = document.getElementById('db-tbody');
+  if(!dados.length){
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">Nenhum registro encontrado.</td></tr>`;
+    document.getElementById('db-count').textContent = '0 registros';
+    return;
+  }
+
+  tbody.innerHTML = dados.map(r => {
+    const dataFmt = r.data ? new Date(r.data+'T12:00').toLocaleDateString('pt-BR') : '—';
+    const km = r.vtrKmPercorrido ? `<span style="color:var(--ok)">${r.vtrKmPercorrido} km</span>` : '—';
+    return `<tr>
+      <td><strong>${dataFmt}</strong><br><span style="color:var(--muted);font-size:.68rem">${r.hora||''}</span></td>
+      <td>${r.posto||'—'}</td>
+      <td style="white-space:nowrap">${r.supervisor||'—'}</td>
+      <td>${r.colaborador||'—'}</td>
+      <td style="white-space:nowrap">${r.vtrPlaca||'—'}<br><span style="color:var(--muted);font-size:.68rem">${km}</span></td>
+      <td>${badgeSit(r.situacao)}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-outline btn-sm" onclick="verDetalhes(${r.id})">📄</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirBanco(${r.id})">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('db-count').textContent = `${dados.length} de ${registros.length} registros`;
+}
+
+function renderTurnosBanco(){
+  const tbody = document.getElementById('turnos-tbody');
+  if(!turnos.length){
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted);">Nenhum turno registrado.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = turnos.map(t => `
+    <tr>
+      <td><strong>${t.dataIni}</strong> ${t.horaIni}</td>
+      <td>${t.supervisor}</td>
+      <td style="white-space:nowrap;font-family:'Rajdhani',sans-serif;font-weight:700;">${t.placa}<br><span style="color:var(--muted);font-weight:400;font-size:.68rem">${t.tipo||''}</span></td>
+      <td>${t.kmIni.toLocaleString('pt-BR')}</td>
+      <td>${t.kmFim ? t.kmFim.toLocaleString('pt-BR') : '—'}</td>
+      <td>${t.kmPercorrido ? `<span style="color:var(--ok);font-weight:700">${t.kmPercorrido} km</span>` : '—'}</td>
+      <td><span class="badge ${t.status==='encerrado'?'badge-ok':'badge-at'}">${t.status==='encerrado'?'Encerrado':'Aberto'}</span></td>
+      <td><button class="btn btn-danger btn-sm" onclick="excluirTurno(${t.id})">🗑️</button></td>
+    </tr>
+  `).join('');
+}
+
+function sortBanco(col){
+  if(dbSort.col===col) dbSort.dir *= -1;
+  else { dbSort.col=col; dbSort.dir=-1; }
+  renderBanco();
+}
+
+function filtrarBanco(){ renderBanco(); }
+
+function excluirBanco(id){
+  if(!confirm('Excluir este registro?')) return;
+  registros = registros.filter(r=>r.id!==id);
+  localStorage.setItem('supervisorRegistros', JSON.stringify(registros));
+  renderBanco();
+  atualizarStats();
+}
+
+function excluirTurno(id){
+  if(!confirm('Excluir este turno?')) return;
+  turnos = turnos.filter(t=>t.id!==id);
+  localStorage.setItem('supervisorTurnos', JSON.stringify(turnos));
+  renderTurnosBanco();
+  renderHistoricoTurnos();
+  atualizarStats();
+}
+
+function limparTodosBanco(){
+  if(!confirm('ATENÇÃO: Isso irá excluir TODOS os registros de vistorias. Deseja continuar?')) return;
+  if(!confirm('Tem certeza absoluta? Esta ação não pode ser desfeita.')) return;
+  registros = [];
+  localStorage.setItem('supervisorRegistros', JSON.stringify(registros));
+  renderBanco();
+  atualizarStats();
+  showToast('🗑️ Todos os registros foram excluídos.');
+}
+
+function exportarCSV(){
+  registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+  if(!registros.length){ alert('Nenhum registro para exportar.'); return; }
+  const cols = ['data','hora','posto','supervisor','colaborador','funcao','turno','situacao','obs_geral','providencias'];
+  const header = ['Data','Hora','Posto','Supervisor','Colaborador','Função','Turno','Situação','Observações','Providências'];
+  const rows = registros.map(r => cols.map(c => `"${(r[c]||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv = [header.join(','), ...rows].join('\n');
+  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `vistorias_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── EXPORTAR VISTORIAS PDF ──
+function exportarVistoriasPDF(){
+  registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+  if(!registros.length){ alert('Nenhum registro para exportar.'); return; }
+  const dataHoje = new Date().toLocaleDateString('pt-BR');
+  let rows = registros.map(r => {
+    const d = r.data ? new Date(r.data+'T12:00').toLocaleDateString('pt-BR') : '—';
+    const sit = r.situacao ? r.situacao.replace(/[✅⚠️🔴🔄]/g,'').trim() : '—';
+    return `<tr>
+      <td>${d}<br><small>${r.hora||''}</small></td>
+      <td>${r.posto||'—'}</td>
+      <td>${r.colaborador||'—'}<br><small>${r.funcao||''}</small></td>
+      <td>${r.supervisor||'—'}</td>
+      <td>${sit}</td>
+      <td>${r.obs_geral||'—'}</td>
+    </tr>`;
+  }).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Relatório de Vistorias</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:20px;}
+    h1{font-size:15px;margin-bottom:2px;} p{font-size:10px;color:#555;margin-bottom:12px;}
+    table{width:100%;border-collapse:collapse;}
+    th{background:#1e2738;color:#e8a838;padding:6px 8px;text-align:left;font-size:10px;text-transform:uppercase;}
+    td{padding:5px 8px;border-bottom:1px solid #ddd;vertical-align:top;}
+    tr:nth-child(even) td{background:#f7f7f7;}
+    small{color:#666;}
+    @media print{body{margin:10px;}}
+  </style></head><body>
+  <h1>🛡️ Relatório de Vistorias — Supervisor</h1>
+  <p>Gerado em: ${dataHoje} &nbsp;|&nbsp; Total: ${registros.length} registros</p>
+  <table><thead><tr><th>Data/Hora</th><th>Posto</th><th>Colaborador</th><th>Supervisor</th><th>Situação</th><th>Observações</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <script>window.onload=()=>{window.print();}<\/script></body></html>`;
+  const w = window.open('','_blank');
+  w.document.write(html); w.document.close();
+}
+
+// ── EXPORTAR TURNOS PDF ──
+function exportarTurnosPDF(){
+  const tList = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
+  if(!tList.length){ alert('Nenhum turno para exportar.'); return; }
+  const dataHoje = new Date().toLocaleDateString('pt-BR');
+  let rows = tList.map(t => `<tr>
+    <td>${t.dataIni||'—'} ${t.horaIni||''}</td>
+    <td>${t.supervisor||'—'}</td>
+    <td>${t.placa||'—'}<br><small>${t.tipo||''}</small></td>
+    <td>${(t.kmIni||0).toLocaleString('pt-BR')}</td>
+    <td>${t.kmFim ? t.kmFim.toLocaleString('pt-BR') : '—'}</td>
+    <td>${t.kmPercorrido ? t.kmPercorrido+' km' : '—'}</td>
+    <td>${t.status==='encerrado'?'Encerrado':'Aberto'}</td>
+  </tr>`).join('');
+  const totalKm = tList.reduce((s,t)=>s+(t.kmPercorrido||0),0);
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Relatório de Turnos</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:20px;}
+    h1{font-size:15px;margin-bottom:2px;} p{font-size:10px;color:#555;margin-bottom:12px;}
+    table{width:100%;border-collapse:collapse;}
+    th{background:#1e2738;color:#e8a838;padding:6px 8px;text-align:left;font-size:10px;text-transform:uppercase;}
+    td{padding:5px 8px;border-bottom:1px solid #ddd;vertical-align:top;}
+    tr:nth-child(even) td{background:#f7f7f7;}
+    small{color:#666;}
+    .total{margin-top:10px;font-size:11px;font-weight:bold;text-align:right;}
+    @media print{body{margin:10px;}}
+  </style></head><body>
+  <h1>🚗 Relatório de Turnos / Controle de KM</h1>
+  <p>Gerado em: ${dataHoje} &nbsp;|&nbsp; Total: ${tList.length} turnos</p>
+  <table><thead><tr><th>Abertura</th><th>Supervisor</th><th>VTR / Placa</th><th>KM Ini</th><th>KM Fim</th><th>Percorrido</th><th>Status</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <div class="total">KM Total Percorrido: ${totalKm.toLocaleString('pt-BR')} km</div>
+  <script>window.onload=()=>{window.print();}<\/script></body></html>`;
+  const w = window.open('','_blank');
+  w.document.write(html); w.document.close();
+}
+
+// ── EXPORTAR TURNOS EXCEL (CSV) ──
+function exportarTurnosExcel(){
+  const tList = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
+  if(!tList.length){ alert('Nenhum turno para exportar.'); return; }
+  const cols = ['dataIni','horaIni','supervisor','placa','tipo','kmIni','kmFim','kmPercorrido','obsIni','obsFim','status'];
+  const header = ['Data Abertura','Hora Abertura','Supervisor','Placa','Tipo VTR','KM Inicial','KM Final','KM Percorrido','Obs. Inicial','Obs. Final','Status'];
+  const rows = tList.map(t => cols.map(c => `"${(t[c]||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv = [header.join(','), ...rows].join('\n');
+  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `turnos_km_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function atualizarStats(){
+  registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+  turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
+  placas = JSON.parse(localStorage.getItem('vtrPlacas') || '[]');
+  const totalKm = turnos.reduce((s,t)=>s+(t.kmPercorrido||0),0);
+  document.getElementById('s-total').textContent = registros.length;
+  document.getElementById('s-turnos').textContent = turnos.length;
+  document.getElementById('s-km').textContent = totalKm.toLocaleString('pt-BR');
+  document.getElementById('s-placas').textContent = placas.length;
+}
+
+// ══════════════════════════════════════════
+// CADASTROS (Supervisores, Postos, Veículos)
+// ══════════════════════════════════════════
+const CADS = {
+  supervisores:  { key: 'cadSupervisores',  defaults: ['Ana Lima','Carlos Silva','Fernanda Costa','Marcos Oliveira','Roberto Santos'] },
+  colaboradores: { key: 'cadColaboradores', defaults: ['João Porteiro','Lucas Zelador','Maria Porteira','Pedro Vigilante','Sandra Recepcionista'] },
+  postos:        { key: 'cadPostos',        defaults: ['Área Externa','Bloco A','Bloco B','Portaria Principal','Portaria Secundária','Zeladoria'] },
+};
+
+// Carregar ou inicializar
+function getCad(tipo){
+  const stored = localStorage.getItem(CADS[tipo].key);
+  if(stored) return JSON.parse(stored);
+  // primeira vez: gravar defaults
+  localStorage.setItem(CADS[tipo].key, JSON.stringify(CADS[tipo].defaults));
+  return [...CADS[tipo].defaults];
+}
+
+// Veículos têm estrutura {placa, tipo}
+function getVeiculos(){
+  const stored = localStorage.getItem('cadVeiculos');
+  if(stored) return JSON.parse(stored);
+  // migrar placas antigas (strings)
+  const antigas = JSON.parse(localStorage.getItem('vtrPlacas') || '[]');
+  const veiculos = antigas.map(p => ({placa: p, tipo: 'Carro'}));
+  localStorage.setItem('cadVeiculos', JSON.stringify(veiculos));
+  return veiculos;
+}
+
+function salvarVeiculos(veiculos){
+  localStorage.setItem('cadVeiculos', JSON.stringify(veiculos));
+  // manter vtrPlacas sincronizado (usado pelo turno)
+  placas = veiculos.map(v => v.placa);
+  localStorage.setItem('vtrPlacas', JSON.stringify(placas));
+  atualizarSelectPlacas();
+  atualizarStats();
+}
+
+// Sub-tab de cadastro
+function showCadTab(tipo, btn){
+  document.querySelectorAll('.cad-panel').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.cad-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('cpanel-'+tipo).style.display='block';
+  btn.classList.add('active');
+  renderCadLista(tipo);
+}
+
+// Renderizar lista
+function renderCadLista(tipo){
+  if(tipo === 'veiculos'){ renderVeiculosLista(); return; }
+  const items = getCad(tipo).slice().sort((a,b) => a.localeCompare(b, 'pt-BR'));
+  const div = document.getElementById('lista-'+tipo);
+  if(!items.length){
+    div.innerHTML = `<div class="cad-empty">Nenhum item cadastrado.</div>`;
+    return;
+  }
+  div.innerHTML = items.map((item) => `
+    <div class="cad-item">
+      <div><div class="cad-nome">${item}</div></div>
+      <button onclick="removerCadastroNome('${tipo}','${item.replace(/'/g,"\\'")}') " title="Remover">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function renderVeiculosLista(){
+  const veiculos = getVeiculos().slice().sort((a,b) => a.placa.localeCompare(b.placa, 'pt-BR'));
+  const div = document.getElementById('lista-veiculos');
+  if(!veiculos.length){
+    div.innerHTML = `<div class="cad-empty">Nenhum veículo cadastrado.</div>`;
+    return;
+  }
+  div.innerHTML = veiculos.map((v, i) => `
+    <div class="cad-item">
+      <div>
+        <div class="cad-nome" style="font-family:'Rajdhani',sans-serif;font-size:0.95rem;font-weight:700;letter-spacing:1px;">${v.placa}</div>
+        <div class="cad-sub">${v.tipo||'—'}</div>
+      </div>
+      <button onclick="removerVeiculoPlaca('${v.placa}')" title="Remover">🗑️</button>
+    </div>
+  `).join('');
+}
+
+// Adicionar item genérico
+function adicionarCadastro(tipo, inputId){
+  const inp = document.getElementById(inputId);
+  const val = inp.value.trim();
+  if(!val){ alert('Digite um valor.'); return; }
+  const items = getCad(tipo);
+  if(items.includes(val)){ alert('Item já cadastrado.'); return; }
+  items.push(val);
+  items.sort((a,b) => a.localeCompare(b, 'pt-BR'));
+  localStorage.setItem(CADS[tipo].key, JSON.stringify(items));
+  inp.value = '';
+  renderCadLista(tipo);
+  atualizarSelectsFormulario();
+}
+
+// Remover item genérico por índice (legado interno)
+function removerCadastro(tipo, i){
+  const items = getCad(tipo);
+  if(!confirm(`Remover "${items[i]}"?`)) return;
+  items.splice(i,1);
+  localStorage.setItem(CADS[tipo].key, JSON.stringify(items));
+  renderCadLista(tipo);
+  atualizarSelectsFormulario();
+}
+
+// Remover item genérico por nome (usado pela lista ordenada)
+function removerCadastroNome(tipo, nome){
+  const items = getCad(tipo);
+  if(!confirm(`Remover "${nome}"?`)) return;
+  const idx = items.indexOf(nome);
+  if(idx === -1) return;
+  items.splice(idx, 1);
+  localStorage.setItem(CADS[tipo].key, JSON.stringify(items));
+  renderCadLista(tipo);
+  atualizarSelectsFormulario();
+}
+
+// Remover veículo por placa
+function removerVeiculoPlaca(placa){
+  const veiculos = getVeiculos();
+  const idx = veiculos.findIndex(v => v.placa === placa);
+  if(idx === -1) return;
+  if(!confirm(`Remover a placa "${placa}"?`)) return;
+  veiculos.splice(idx, 1);
+  salvarVeiculos(veiculos);
+  renderVeiculosLista();
+}
+
+// Adicionar veículo
+function adicionarVeiculo(){
+  const placa = document.getElementById('inp-placa').value.trim().toUpperCase();
+  const tipo  = document.getElementById('inp-vtr-tipo').value;
+  if(!placa){ alert('Digite a placa.'); return; }
+  const veiculos = getVeiculos();
+  if(veiculos.find(v=>v.placa===placa)){ alert('Placa já cadastrada.'); return; }
+  veiculos.push({placa, tipo});
+  salvarVeiculos(veiculos);
+  document.getElementById('inp-placa').value = '';
+  document.getElementById('inp-vtr-tipo').selectedIndex = 0;
+  renderVeiculosLista();
+  atualizarStats();
+}
+
+// Remover veículo
+function removerVeiculo(i){
+  const veiculos = getVeiculos();
+  if(!confirm(`Remover a placa "${veiculos[i].placa}"?`)) return;
+  veiculos.splice(i,1);
+  salvarVeiculos(veiculos);
+  renderVeiculosLista();
+}
+
+// Sincronizar todos os selects do formulário com os cadastros
+function atualizarSelectsFormulario(){
+  const supervisores  = getCad('supervisores').slice().sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const postos        = getCad('postos').slice().sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const colaboradores = getCad('colaboradores').slice().sort((a,b)=>a.localeCompare(b,'pt-BR'));
+
+  // Selects de supervisor
+  ['supervisor','t_supervisor'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Selecione —</option>';
+    supervisores.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      sel.appendChild(o);
+    });
+    sel.value = cur;
+  });
+
+  // Select de posto
+  const selPosto = document.getElementById('posto');
+  if(selPosto){
+    const cur = selPosto.value;
+    selPosto.innerHTML = '<option value="">— Selecione —</option>';
+    postos.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p; o.textContent = p;
+      selPosto.appendChild(o);
+    });
+    selPosto.value = cur;
+  }
+
+  // Select de colaborador
+  const selColab = document.getElementById('colaborador');
+  if(selColab){
+    const cur = selColab.value;
+    selColab.innerHTML = '<option value="">— Selecione —</option>';
+    colaboradores.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      selColab.appendChild(o);
+    });
+    selColab.value = cur;
+  }
+}
+
+// Inicializar selects com dados dos cadastros ao carregar
+window.addEventListener('load', () => {
+  atualizarSelectsFormulario();
+  // migrar placas para estrutura de veículos se necessário
+  getVeiculos();
+}, true); // captura antes do outro listener
+
+// ══════════════════════════════════════════
+// DETALHE MODAL
+// ══════════════════════════════════════════
+function verDetalhes(id){
+  registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+  const r = registros.find(x=>x.id===id);
+  if(!r) return;
+  const dataFmt = r.data ? new Date(r.data+'T12:00').toLocaleDateString('pt-BR') : '—';
+  document.getElementById('detalhe-content').innerHTML = `
+    <div class="detalhe-section">Identificação</div>
+    <div class="detalhe-grid">
+      <div class="detalhe-item"><div class="d-lbl">Data</div><div class="d-val">${dataFmt} ${r.hora||''}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Posto</div><div class="d-val">${r.posto||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Supervisor</div><div class="d-val">${r.supervisor||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Colaborador</div><div class="d-val">${r.colaborador||'—'} ${r.funcao?'('+r.funcao+')':''}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Turno</div><div class="d-val">${r.turno||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Situação</div><div class="d-val">${badgeSit(r.situacao)}</div></div>
+    </div>
+    <div class="detalhe-section">VTR do Supervisor</div>
+    <div class="detalhe-grid">
+      <div class="detalhe-item"><div class="d-lbl">Placa</div><div class="d-val">${r.vtrPlaca||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Tipo</div><div class="d-val">${r.vtrTipo||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">KM Inicial</div><div class="d-val">${r.vtrKmIni||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">KM Final</div><div class="d-val">${r.vtrKmFim||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Percorrido</div><div class="d-val" style="color:var(--ok);font-weight:700">${r.vtrKmPercorrido ? r.vtrKmPercorrido+' km' : '—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Estado</div><div class="d-val">${r.vtrEstado||'—'}</div></div>
+    </div>
+    <div class="detalhe-section">Equipamentos</div>
+    <div class="detalhe-grid">
+      <div class="detalhe-item"><div class="d-lbl">PC</div><div class="d-val">${r.pc||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Câmeras</div><div class="d-val">${r.cameras||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Cancela</div><div class="d-val">${r.cancela||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Geladeira</div><div class="d-val">${r.geladeira||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Micro-ondas</div><div class="d-val">${r.microondas||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Ronda</div><div class="d-val">${r.ronda||'—'}</div></div>
+    </div>
+    ${r.obs_geral?`<div class="detalhe-section">Observações</div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">${r.obs_geral}</div>`:''}
+    ${r.providencias?`<div class="detalhe-section">Providências</div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">${r.providencias}</div>`:''}
+  `;
+  document.getElementById('modal-detalhe').classList.add('open');
+}
+
+function fecharModalDetalhe(){
+  document.getElementById('modal-detalhe').classList.remove('open');
+}
+document.getElementById('modal-detalhe').addEventListener('click',function(e){
+  if(e.target===this) fecharModalDetalhe();
+});
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// INSPEÇÃO DIURNA
+// ══════════════════════════════════════════
+function toggleInspDiurna(){
+  const btn   = document.getElementById('btn-insp-diurna');
+  const panel = document.getElementById('panel-insp-diurna');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+}
+
+function toggleInspLocal(id){
+  const header = document.querySelector(`#body-${id}`).previousElementSibling;
+  const body   = document.getElementById(`body-${id}`);
+  const arrow  = document.getElementById(`arrow-${id}`);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  header.classList.toggle('open', !isOpen);
+}
+
+function previewInspFoto(input, previewId){
+  const container = document.getElementById(previewId);
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.title = file.name;
+      container.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg || '✅ Salvo!';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>
+
