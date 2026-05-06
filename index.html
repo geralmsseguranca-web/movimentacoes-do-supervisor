@@ -295,18 +295,18 @@
 </script>
 <style>
   :root {
-    --bg: #0a0e14;
-    --surface: #111720;
-    --surface2: #181f2b;
-    --surface3: #1e2738;
-    --border: #252e3f;
-    --accent: #e8a838;
-    --accent2: #f0c060;
-    --danger: #e05c5c;
-    --ok: #3fb68a;
-    --info: #4a9eff;
-    --text: #dde4ee;
-    --muted: #6b7894;
+    --bg: #080c12;
+    --surface: #0f1520;
+    --surface2: #161e2c;
+    --surface3: #1c2535;
+    --border: #2a3650;
+    --accent: #f0b340;
+    --accent2: #f8cc68;
+    --danger: #f06060;
+    --ok: #44c795;
+    --info: #5aabff;
+    --text: #eaf0fa;
+    --muted: #8fa3c0;
     --radius: 7px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -350,7 +350,7 @@
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
-    color: var(--muted);
+    color: #8fa3c0;
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.75rem;
     font-weight: 600;
@@ -361,7 +361,7 @@
     text-align: center;
   }
   .tab-btn:hover { color: var(--text); background: var(--surface2); }
-  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(232,168,56,.04); }
+  .tab-btn.active { color: var(--accent2); border-bottom-color: var(--accent); background: rgba(240,179,64,.06); }
 
   /* LAYOUT */
   .main { padding: 14px 12px 80px; max-width: 800px; margin: 0 auto; }
@@ -371,7 +371,7 @@
   /* CARD */
   .card {
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1px solid #283448;
     border-radius: var(--radius);
     padding: 13px 14px;
     margin-bottom: 10px;
@@ -407,14 +407,14 @@
   .field { display: flex; flex-direction: column; gap: 4px; }
   label {
     font-size: 0.66rem;
-    font-weight: 500;
-    color: var(--muted);
+    font-weight: 600;
+    color: #a8bdd4;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
   input, select, textarea {
-    background: var(--bg);
-    border: 1px solid var(--border);
+    background: #0c1219;
+    border: 1px solid #2e3e58;
     border-radius: 5px;
     color: var(--text);
     font-family: 'Noto Sans', sans-serif;
@@ -423,7 +423,7 @@
     transition: border-color .2s;
     width: 100%;
   }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(240,179,64,.12); }
   select { cursor: pointer; }
   textarea { resize: vertical; min-height: 56px; }
 
@@ -433,21 +433,22 @@
   .status-opt + label {
     padding: 5px 12px;
     border-radius: 16px;
-    border: 1px solid var(--border);
+    border: 1px solid #2e3e58;
     font-size: 0.74rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     text-transform: uppercase;
     transition: all .2s;
     letter-spacing: 0.4px;
+    color: #8fa3c0;
   }
-  .status-opt:checked + label { border-color: var(--accent); background: rgba(232,168,56,.13); color: var(--accent2); }
+  .status-opt:checked + label { border-color: var(--accent); background: rgba(240,179,64,.16); color: var(--accent2); }
 
   /* CHECKLIST */
   .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   .check-item { display: flex; align-items: center; gap: 8px; }
   .check-item input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); flex-shrink: 0; cursor: pointer; padding: 0; }
-  .check-item label { font-size: 0.78rem; text-transform: none; letter-spacing: 0; color: var(--text); cursor: pointer; }
+  .check-item label { font-size: 0.78rem; text-transform: none; letter-spacing: 0; color: #c8d8ea; cursor: pointer; }
 
   /* ITEM AVALIADO */
   .item-avaliado {
@@ -461,7 +462,7 @@
     font-family: 'Rajdhani', sans-serif;
     font-size: 0.78rem;
     font-weight: 700;
-    color: var(--accent2);
+    color: #e0c070;
     text-transform: uppercase;
     margin-bottom: 7px;
   }
@@ -470,21 +471,22 @@
   .rating-opt + label {
     padding: 4px 10px;
     border-radius: 4px;
-    border: 1px solid var(--border);
+    border: 1px solid #2e3e58;
     font-size: 0.7rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: all .2s;
     text-transform: uppercase;
+    color: #7a9bbf;
   }
   .rating-ok + label { color: var(--ok); }
-  .rating-ok:checked + label { background: rgba(63,182,138,.18); border-color: var(--ok); }
+  .rating-ok:checked + label { background: rgba(68,199,149,.22); border-color: var(--ok); color: #55e0aa; }
   .rating-at + label { color: var(--accent); }
-  .rating-at:checked + label { background: rgba(232,168,56,.18); border-color: var(--accent); }
+  .rating-at:checked + label { background: rgba(240,179,64,.22); border-color: var(--accent); color: var(--accent2); }
   .rating-ng + label { color: var(--danger); }
-  .rating-ng:checked + label { background: rgba(224,92,92,.18); border-color: var(--danger); }
-  .rating-na + label { color: var(--muted); }
-  .rating-na:checked + label { background: rgba(107,120,148,.13); border-color: var(--muted); }
+  .rating-ng:checked + label { background: rgba(240,96,96,.22); border-color: var(--danger); color: #f57070; }
+  .rating-na + label { color: #8fa3c0; }
+  .rating-na:checked + label { background: rgba(143,163,192,.18); border-color: #8fa3c0; color: #c0d0e0; }
 
   /* FOTO */
   .foto-area {
@@ -572,7 +574,7 @@
     font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--muted);
+    color: #a8bdd4;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
   }
@@ -593,10 +595,10 @@
     text-transform: uppercase;
     white-space: nowrap;
   }
-  .badge-ok { background: rgba(63,182,138,.13); color: var(--ok); border: 1px solid rgba(63,182,138,.4); }
-  .badge-at { background: rgba(232,168,56,.13); color: var(--accent2); border: 1px solid rgba(232,168,56,.4); }
-  .badge-ng { background: rgba(224,92,92,.13); color: var(--danger); border: 1px solid rgba(224,92,92,.4); }
-  .badge-nd { background: rgba(107,120,148,.1); color: var(--muted); border: 1px solid var(--border); }
+  .badge-ok { background: rgba(68,199,149,.18); color: #55e0aa; border: 1px solid rgba(68,199,149,.5); }
+  .badge-at { background: rgba(240,179,64,.18); color: #f8cc68; border: 1px solid rgba(240,179,64,.5); }
+  .badge-ng { background: rgba(240,96,96,.18); color: #f57070; border: 1px solid rgba(240,96,96,.5); }
+  .badge-nd { background: rgba(143,163,192,.1); color: #8fa3c0; border: 1px solid #2a3650; }
 
   .empty-state { text-align: center; padding: 32px 20px; color: var(--muted); font-size: 0.82rem; }
   .empty-state .big { font-size: 30px; margin-bottom: 8px; }
@@ -615,11 +617,11 @@
     cursor: pointer;
     transition: all .2s;
   }
-  .btn-primary { background: var(--accent); color: #0a0e14; }
+  .btn-primary { background: var(--accent); color: #06090e; font-weight: 800; }
   .btn-primary:hover { background: var(--accent2); }
-  .btn-success { background: var(--ok); color: #0a0e14; }
+  .btn-success { background: var(--ok); color: #06090e; font-weight: 800; }
   .btn-success:hover { filter: brightness(1.1); }
-  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-outline { background: transparent; border: 1px solid #3a4e6a; color: #a8bdd4; }
   .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
   .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
   .btn-danger:hover { background: rgba(224,92,92,.08); }
@@ -699,7 +701,7 @@
     font-weight: 700;
     color: var(--accent2);
   }
-  .stat-box .stat-lbl { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+  .stat-box .stat-lbl { font-size: 0.62rem; color: #8fa3c0; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
 
   .db-filters {
     display: flex;
@@ -725,7 +727,7 @@
     font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--muted);
+    color: #a8bdd4;
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
@@ -888,22 +890,23 @@
   .insp-status-opt + label {
     padding: 4px 11px;
     border-radius: 14px;
-    border: 1px solid var(--border);
+    border: 1px solid #2e3e58;
     font-size: 0.7rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     text-transform: uppercase;
     transition: all .2s;
     letter-spacing: 0.3px;
+    color: #8fa3c0;
   }
   .insp-s-ok + label { color: var(--ok); }
-  .insp-s-ok:checked + label { background: rgba(63,182,138,.18); border-color: var(--ok); color: var(--ok); }
+  .insp-s-ok:checked + label { background: rgba(68,199,149,.22); border-color: var(--ok); color: #55e0aa; }
   .insp-s-at + label { color: var(--accent); }
-  .insp-s-at:checked + label { background: rgba(232,168,56,.18); border-color: var(--accent); color: var(--accent2); }
+  .insp-s-at:checked + label { background: rgba(240,179,64,.22); border-color: var(--accent); color: var(--accent2); }
   .insp-s-ng + label { color: var(--danger); }
-  .insp-s-ng:checked + label { background: rgba(224,92,92,.18); border-color: var(--danger); color: var(--danger); }
-  .insp-s-na + label { color: var(--muted); }
-  .insp-s-na:checked + label { background: rgba(107,120,148,.13); border-color: var(--muted); }
+  .insp-s-ng:checked + label { background: rgba(240,96,96,.22); border-color: var(--danger); color: #f57070; }
+  .insp-s-na + label { color: #8fa3c0; }
+  .insp-s-na:checked + label { background: rgba(143,163,192,.18); border-color: #8fa3c0; color: #c0d0e0; }
 
   .insp-foto-area {
     border: 1px dashed rgba(74,158,255,.35);
@@ -1869,6 +1872,18 @@ document.getElementById('modal-placas').addEventListener('click',function(e){
 let turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
 let turnoAtivo = JSON.parse(localStorage.getItem('turnoAtivo') || 'null');
 
+// Sincroniza variáveis locais com window (o Firebase listener escreve em window.*)
+Object.defineProperty(window, 'turnoAtivo', {
+  get(){ return turnoAtivo; },
+  set(v){ turnoAtivo = v; },
+  configurable: true
+});
+Object.defineProperty(window, 'turnos', {
+  get(){ return turnos; },
+  set(v){ turnos = v; },
+  configurable: true
+});
+
 function atualizarStatusTurno(){
   const bar = document.getElementById('turno-status-bar');
   const cardAb = document.getElementById('card-abertura');
@@ -2068,67 +2083,95 @@ function calcKm(){
 // SALVAR VISTORIA
 // ══════════════════════════════════════════
 let registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+Object.defineProperty(window, 'registros', {
+  get(){ return registros; },
+  set(v){ registros = v; },
+  configurable: true
+});
 
 function getRadioVal(name){ const r=document.querySelector(`input[name="${name}"]:checked`); return r?r.value:''; }
 
 function salvarRegistro(){
-  const posto = document.getElementById('posto').value;
-  const supervisor = document.getElementById('supervisor').value;
-  const data = document.getElementById('data_visita').value;
+  try {
+    const posto = document.getElementById('posto').value;
+    const supervisor = document.getElementById('supervisor').value;
+    const data = document.getElementById('data_visita').value;
 
-  if(!posto || !supervisor || !data){
-    alert('Preencha pelo menos: Posto, Supervisor e Data.');
-    return;
+    if(!posto || !supervisor || !data){
+      alert('Preencha pelo menos: Posto, Supervisor e Data.');
+      return;
+    }
+
+    // Helper para leitura segura de elementos opcionais
+    const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+
+    const kmIni = parseInt(val('vtr_km_ini'))||0;
+    const kmFim = parseInt(val('vtr_km_fim'))||0;
+
+    // turnoAtivo pode vir da variável local OU do window (Firebase)
+    const taAtivo = (typeof turnoAtivo !== 'undefined' && turnoAtivo) || window.turnoAtivo || null;
+
+    const reg = {
+      id: Date.now(),
+      data,
+      hora: val('hora_visita'),
+      posto, supervisor,
+      colaborador: val('colaborador'),
+      funcao: val('funcao'),
+      turno: val('turno'),
+      situacao: val('situacao_geral'),
+      vtrPlaca: val('vtr_placa'),
+      vtrKmIni: kmIni || '',
+      vtrKmFim: kmFim || '',
+      vtrKmPercorrido: (kmIni > 0 && kmFim > kmIni) ? kmFim - kmIni : '',
+      vtrEstado: val('vtr_estado'),
+      ronda: val('ronda_ok'),
+      obs_ronda: val('obs_ronda'),
+      pc: getRadioVal('pc'),
+      cameras: getRadioVal('cameras'),
+      cancela: getRadioVal('cancela'),
+      geladeira: getRadioVal('geladeira'),
+      microondas: getRadioVal('microondas'),
+      viatura: getRadioVal('viatura_posto'),
+      viaturaTipo: val('viatura_tipo'),
+      viaturaPlaca: val('viatura_placa'),
+      obs_viatura: val('obs_viatura_posto'),
+      obs_uniforme: val('obs_uniforme'),
+      obs_geral: val('obs_geral'),
+      providencias: val('providencias'),
+      turnoId: taAtivo ? taAtivo.id : null,
+    };
+
+    registros.unshift(reg);
+    localStorage.setItem('supervisorRegistros', JSON.stringify(registros));
+
+    // Salvar no Firebase (assíncrono — não bloqueia)
+    if(typeof window.fbSalvarRegistro === 'function') window.fbSalvarRegistro(reg);
+
+    // Atualiza UI imediatamente
+    renderBanco();
+    renderRelatorio();
+    atualizarStats();
+    showToast('💾 Vistoria salva com sucesso!');
+
+    // Feedback visual no botão
+    const btnSalvar = document.querySelector('#tab-vistoria .btn-primary');
+    if(btnSalvar){
+      const original = btnSalvar.innerHTML;
+      btnSalvar.innerHTML = '✅ Salvo!';
+      btnSalvar.style.background = 'var(--ok)';
+      btnSalvar.disabled = true;
+      setTimeout(() => {
+        btnSalvar.innerHTML = original;
+        btnSalvar.style.background = '';
+        btnSalvar.disabled = false;
+      }, 2000);
+    }
+
+  } catch(err) {
+    console.error('Erro ao salvar vistoria:', err);
+    alert('Erro ao salvar: ' + err.message);
   }
-
-  // Helper para leitura segura de elementos opcionais
-  const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-
-  const kmIni = parseInt(val('vtr_km_ini'))||0;
-  const kmFim = parseInt(val('vtr_km_fim'))||0;
-
-  const reg = {
-    id: Date.now(),
-    data,
-    hora: val('hora_visita'),
-    posto, supervisor,
-    colaborador: val('colaborador'),
-    funcao: val('funcao'),
-    turno: val('turno'),
-    situacao: val('situacao_geral'),
-    // VTR do Supervisor
-    vtrPlaca: val('vtr_placa'),
-    vtrKmIni: kmIni || '',
-    vtrKmFim: kmFim || '',
-    vtrKmPercorrido: (kmIni > 0 && kmFim > kmIni) ? kmFim - kmIni : '',
-    vtrEstado: val('vtr_estado'),
-    // Ronda
-    ronda: val('ronda_ok'),
-    obs_ronda: val('obs_ronda'),
-    // Equipamentos
-    pc: getRadioVal('pc'),
-    cameras: getRadioVal('cameras'),
-    cancela: getRadioVal('cancela'),
-    geladeira: getRadioVal('geladeira'),
-    microondas: getRadioVal('microondas'),
-    // Viatura do Posto
-    viatura: getRadioVal('viatura_posto'),
-    viaturaTipo: val('viatura_tipo'),
-    viaturaPlaca: val('viatura_placa'),
-    obs_viatura: val('obs_viatura_posto'),
-    // Uniforme
-    obs_uniforme: val('obs_uniforme'),
-    // Geral
-    obs_geral: val('obs_geral'),
-    providencias: val('providencias'),
-    turnoId: turnoAtivo ? turnoAtivo.id : null,
-  };
-
-  registros.unshift(reg);
-  localStorage.setItem('supervisorRegistros', JSON.stringify(registros));
-  if(typeof fbSalvarRegistro === 'function') fbSalvarRegistro(reg);
-  showToast('💾 Vistoria salva com sucesso!');
-  atualizarStats();
 }
 
 function limparForm(){
