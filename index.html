@@ -927,6 +927,122 @@
     .db-stats { grid-template-columns: repeat(2, 1fr); }
     .detalhe-grid { grid-template-columns: 1fr; }
   }
+
+  /* ── BOTÃO FLUTUANTE DE VISTORIA ── */
+  #fab-vistoria {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    z-index: 250;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    color: #06090e;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(240,179,64,.45), 0 2px 6px rgba(0,0,0,.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .2s, box-shadow .2s;
+  }
+  #fab-vistoria:hover { transform: scale(1.1); box-shadow: 0 6px 24px rgba(240,179,64,.6); }
+  #fab-vistoria:active { transform: scale(0.95); }
+
+  /* Tooltip do FAB */
+  #fab-vistoria::before {
+    content: 'Nova Vistoria';
+    position: absolute;
+    right: 66px;
+    background: var(--surface);
+    color: var(--accent2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 11px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+  }
+  #fab-vistoria:hover::before { opacity: 1; }
+
+  /* ── MODAL DE VISTORIA ── */
+  #modal-vistoria {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.82);
+    z-index: 400;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0;
+    overflow-y: auto;
+  }
+  #modal-vistoria.open { display: flex; }
+  #modal-vistoria-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px 12px 0 0;
+    width: 100%;
+    max-width: 640px;
+    margin-top: auto;
+    padding: 0 0 40px;
+    animation: slideUp .28s ease;
+    position: relative;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(60px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  #modal-vistoria-header {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    border-bottom: 2px solid var(--accent);
+    border-radius: 12px 12px 0 0;
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+  }
+  #modal-vistoria-header .mv-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex: 1;
+  }
+  #modal-vistoria-header button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    line-height: 1;
+    transition: color .2s;
+  }
+  #modal-vistoria-header button:hover { color: var(--danger); }
+  #modal-vistoria-body { padding: 14px 14px 0; }
+  #modal-vistoria-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 14px;
+    display: flex;
+    gap: 8px;
+  }
 </style>
 </head>
 <body>
@@ -945,8 +1061,6 @@
 
 <div class="tabs">
   <button class="tab-btn active" onclick="showTab('turno',this)">🚗 Turno / KM</button>
-  <button class="tab-btn" onclick="showTab('vistoria',this)">📋 Vistoria</button>
-  <button class="tab-btn" onclick="showTab('relatorio',this)">📊 Relatório</button>
   <button class="tab-btn" onclick="showTab('banco',this)">🗄️ Banco de Dados</button>
 </div>
 
@@ -1090,6 +1204,14 @@
     </div>
     <div id="historico-turnos">
       <div class="empty-state"><div class="big">🚗</div><p>Nenhum turno registrado ainda.</p></div>
+    </div>
+  </div>
+
+  <!-- RELATÓRIO DE VISTORIAS -->
+  <div class="card">
+    <div class="card-title">📊 Relatório de Vistorias</div>
+    <div id="relatorio-wrap">
+      <div class="empty-state"><div class="big">📋</div><p>Nenhum registro salvo ainda.</p></div>
     </div>
   </div>
 
@@ -1278,43 +1400,13 @@
     </div>
   </div>
 
-  <!-- VTR DO SUPERVISOR -->
-  <div class="card">
-    <div class="card-title">🚗 VTR do Supervisor</div>
-    <div class="row three">
-      <div class="field">
-        <label>Placa da VTR</label>
-        <select id="vtr_placa">
-          <option value="">— Selecione —</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>KM Inicial</label>
-        <input type="number" id="vtr_km_ini" placeholder="0" oninput="calcKm()">
-      </div>
-      <div class="field">
-        <label>KM Final</label>
-        <input type="number" id="vtr_km_fim" placeholder="0" oninput="calcKm()">
-      </div>
-    </div>
-    <div id="km_resultado" style="display:none;background:rgba(63,182,138,.08);border:1px solid rgba(63,182,138,.3);border-radius:6px;padding:8px 12px;margin-bottom:8px;gap:10px;align-items:center;font-family:'Rajdhani',sans-serif;font-size:0.85rem;">
-      <span><span style="color:var(--muted)">KM Ini:</span> <strong id="km_ini_show">—</strong></span>
-      <span style="color:var(--muted)">→</span>
-      <span><span style="color:var(--muted)">KM Fim:</span> <strong id="km_fim_show">—</strong></span>
-      <span style="color:var(--muted)">=</span>
-      <span style="color:var(--ok);font-weight:700;" id="km_diff">—</span>
-    </div>
-    <div class="row">
-      <div class="field">
-        <label>Estado da VTR</label>
-        <select id="vtr_estado">
-          <option value="">— Selecione —</option>
-          <option>✅ OK — Sem avarias</option>
-          <option>⚠️ Pequenas avarias</option>
-          <option>🔴 Avarias graves</option>
-        </select>
-      </div>
-    </div>
+  <!-- campos VTR ocultos — mantidos no DOM para compatibilidade com salvarRegistro -->
+  <div style="display:none">
+    <select id="vtr_placa"></select>
+    <input type="number" id="vtr_km_ini">
+    <input type="number" id="vtr_km_fim">
+    <div id="km_resultado"><strong id="km_ini_show"></strong><strong id="km_fim_show"></strong><span id="km_diff"></span></div>
+    <select id="vtr_estado"></select>
   </div>
 
   <!-- VIATURA DO POSTO -->
@@ -1564,17 +1656,6 @@
 </div><!-- /tab-vistoria -->
 
 
-<!-- ══════════ TAB RELATÓRIO ══════════ -->
-<div id="tab-relatorio" class="tab-panel">
-  <div class="card">
-    <div class="card-title">Relatório de Vistorias</div>
-    <div id="relatorio-wrap">
-      <div class="empty-state"><div class="big">📋</div><p>Nenhum registro salvo ainda.</p></div>
-    </div>
-  </div>
-</div>
-
-
 <!-- ══════════ TAB BANCO DE DADOS ══════════ -->
 <div id="tab-banco" class="tab-panel">
 
@@ -1735,6 +1816,27 @@
   </div>
 </div>
 
+<!-- ── BOTÃO FLUTUANTE NOVA VISTORIA ── -->
+<button id="fab-vistoria" onclick="abrirModalVistoria()" title="Nova Vistoria">📋</button>
+
+<!-- ── MODAL DE VISTORIA ── -->
+<div id="modal-vistoria">
+  <div id="modal-vistoria-box">
+    <div id="modal-vistoria-header">
+      <span class="mv-title">📋 Nova Vistoria</span>
+      <button onclick="fecharModalVistoria()" title="Fechar">✕</button>
+    </div>
+    <div id="modal-vistoria-body">
+      <!-- conteúdo injetado via JS a partir do tab-vistoria -->
+    </div>
+    <div id="modal-vistoria-footer">
+      <button class="btn btn-primary" id="btn-salvar-vistoria-modal" onclick="salvarRegistro()" style="flex:1;">💾 Salvar Vistoria</button>
+      <button class="btn btn-outline" onclick="limparForm()">🗑️ Limpar</button>
+      <button class="btn btn-outline" onclick="fecharModalVistoria()">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast">✅ Salvo com sucesso!</div>
 
 <script>
@@ -1763,6 +1865,7 @@ window.addEventListener('load', () => {
   document.getElementById('t_hora_fim').value = timeStr;
   atualizarSelectPlacas();
   renderHistoricoTurnos();
+  renderRelatorio();
   atualizarStatusTurno();
   renderTurnosBanco();
   renderBanco();
@@ -1779,7 +1882,7 @@ function showTab(id, btn){
   document.getElementById('tab-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
   else document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.textContent.includes(id)) b.classList.add('active'); });
-  if(id==='relatorio') renderRelatorio();
+  if(id==='turno') { renderRelatorio(); renderHistoricoTurnos(); atualizarStatusTurno(); }
   if(id==='banco') { renderBanco(); renderTurnosBanco(); atualizarStats(); renderCadLista('supervisores'); renderCadLista('colaboradores'); renderCadLista('postos'); renderVeiculosLista(); }
 }
 
@@ -1929,6 +2032,7 @@ function abrirTurno(){
   localStorage.setItem('turnoAtivo', JSON.stringify(turnoAtivo));
   if(typeof fbSalvarTurnoAtivo === 'function') fbSalvarTurnoAtivo(turnoAtivo);
   atualizarStatusTurno();
+  limparFormSilencioso();
   showToast('🟢 Turno aberto com sucesso!');
 }
 
@@ -1967,6 +2071,7 @@ function encerrarTurno(){
   atualizarStatusTurno();
   renderHistoricoTurnos();
   atualizarStats();
+  limparFormSilencioso();
   showToast('🔴 Turno encerrado! KM: ' + turnoCompleto.kmPercorrido + ' km');
 }
 
@@ -2166,8 +2271,7 @@ function salvarRegistro(){
   }
 }
 
-function limparForm(){
-  if(!confirm('Limpar todos os campos?')) return;
+function limparFormSilencioso(){
   document.querySelectorAll('#tab-vistoria input[type=text],#tab-vistoria input[type=date],#tab-vistoria input[type=time],#tab-vistoria input[type=number],#tab-vistoria textarea').forEach(el=>el.value='');
   document.querySelectorAll('#tab-vistoria select').forEach(el=>el.selectedIndex=0);
   document.querySelectorAll('#tab-vistoria input[type=checkbox]').forEach(el=>el.checked=false);
@@ -2175,6 +2279,11 @@ function limparForm(){
   const now = new Date();
   document.getElementById('data_visita').value = now.toISOString().slice(0,10);
   document.getElementById('hora_visita').value = now.toTimeString().slice(0,5);
+}
+
+function limparForm(){
+  if(!confirm('Limpar todos os campos?')) return;
+  limparFormSilencioso();
 }
 
 // ══════════════════════════════════════════
@@ -2718,6 +2827,77 @@ function fecharModalDetalhe(){
 document.getElementById('modal-detalhe').addEventListener('click',function(e){
   if(e.target===this) fecharModalDetalhe();
 });
+
+// ══════════════════════════════════════════
+// MODAL DE VISTORIA (FAB)
+// ══════════════════════════════════════════
+function abrirModalVistoria(){
+  // Copia o conteúdo do tab-vistoria para o modal (sem o btn-row do final)
+  const fonte = document.getElementById('tab-vistoria');
+  const destino = document.getElementById('modal-vistoria-body');
+  // Limpa destino e clona todo o conteúdo, exceto o btn-row original
+  destino.innerHTML = '';
+  Array.from(fonte.children).forEach(child => {
+    if(child.classList.contains('btn-row')) return; // pula botões antigos
+    destino.appendChild(child.cloneNode(true));
+  });
+  // Atualiza data/hora para agora
+  const now = new Date();
+  const dv = destino.querySelector('#data_visita');
+  const hv = destino.querySelector('#hora_visita');
+  // Os IDs duplicam — usar name único no modal não é necessário pois salvarRegistro
+  // lê do documento principal. Então apenas sincronizamos o tab-vistoria oculto.
+  document.getElementById('data_visita').value = now.toISOString().slice(0,10);
+  document.getElementById('hora_visita').value = now.toTimeString().slice(0,5);
+  // Sincroniza selects do modal com os valores atuais do form oculto
+  sincronizarModalVistoria(destino);
+  document.getElementById('modal-vistoria').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function sincronizarModalVistoria(container){
+  // Sincroniza mudanças nos inputs do modal → form oculto (tab-vistoria)
+  container.querySelectorAll('input,select,textarea').forEach(el => {
+    const id = el.id;
+    if(!id) return;
+    const orig = document.getElementById(id);
+    if(!orig || el === orig) return;
+    // Copia valor inicial
+    if(el.type === 'checkbox' || el.type === 'radio'){
+      el.checked = orig.checked;
+    } else {
+      el.value = orig.value;
+    }
+    // Espelha mudanças → form oculto
+    el.addEventListener('change', () => {
+      if(el.type === 'checkbox' || el.type === 'radio') orig.checked = el.checked;
+      else orig.value = el.value;
+    });
+    el.addEventListener('input', () => {
+      if(el.type !== 'checkbox' && el.type !== 'radio') orig.value = el.value;
+    });
+  });
+}
+
+function fecharModalVistoria(){
+  document.getElementById('modal-vistoria').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Fecha ao clicar fora do box
+document.getElementById('modal-vistoria').addEventListener('click', function(e){
+  if(e.target === this) fecharModalVistoria();
+});
+
+// Após salvar, fecha o modal automaticamente
+const _salvarOriginal = salvarRegistro;
+salvarRegistro = function(){
+  _salvarOriginal();
+  const modal = document.getElementById('modal-vistoria');
+  if(modal.classList.contains('open')){
+    setTimeout(() => fecharModalVistoria(), 1200);
+  }
+};
 
 // ══════════════════════════════════════════
 // TOAST
