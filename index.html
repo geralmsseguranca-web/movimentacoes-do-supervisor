@@ -2802,61 +2802,79 @@ function verDetalhes(id){
   registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
   const r = registros.find(x=>x.id===id);
   if(!r) return;
+
   const dataFmt = r.data ? new Date(r.data+'T12:00').toLocaleDateString('pt-BR') : '—';
-  document.getElementById('detalhe-content').innerHTML = `
-    <div class="detalhe-section">Identificação</div>
-    <div class="detalhe-grid">
-      <div class="detalhe-item"><div class="d-lbl">Data</div><div class="d-val">${dataFmt} ${r.hora||''}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Posto</div><div class="d-val">${r.posto||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Supervisor</div><div class="d-val">${r.supervisor||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Colaborador</div><div class="d-val">${r.colaborador||'—'} ${r.funcao?'('+r.funcao+')':''}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Turno</div><div class="d-val">${r.turno||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Situação</div><div class="d-val">${badgeSit(r.situacao)}</div></div>
-    </div>
-    <div class="detalhe-section">VTR do Supervisor</div>
-    <div class="detalhe-grid">
-      <div class="detalhe-item"><div class="d-lbl">Placa</div><div class="d-val">${r.vtrPlaca||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Tipo</div><div class="d-val">${r.vtrTipo||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">KM Inicial</div><div class="d-val">${r.vtrKmIni||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">KM Final</div><div class="d-val">${r.vtrKmFim||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Percorrido</div><div class="d-val" style="color:var(--ok);font-weight:700">${r.vtrKmPercorrido ? r.vtrKmPercorrido+' km' : '—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Estado</div><div class="d-val">${r.vtrEstado||'—'}</div></div>
-    </div>
-    <div class="detalhe-section">Equipamentos</div>
-    <div class="detalhe-grid">
-      <div class="detalhe-item"><div class="d-lbl">PC</div><div class="d-val">${r.pc||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Câmeras</div><div class="d-val">${r.cameras||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Cancela</div><div class="d-val">${r.cancela||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Geladeira</div><div class="d-val">${r.geladeira||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Micro-ondas</div><div class="d-val">${r.microondas||'—'}</div></div>
-      <div class="detalhe-item"><div class="d-lbl">Ronda</div><div class="d-val">${r.ronda||'—'}</div></div>
-    </div>
-    ${r.obs_geral?`<div class="detalhe-section">Observações</div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">${r.obs_geral}</div>`:''}
-    ${r.providencias?`<div class="detalhe-section">Providências</div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">${r.providencias}</div>`:''}
-    ${(r.insp_hall||r.insp_lazer||r.insp_garagem||r.insp_corredor||r.insp_outro)?`
-    <div class="detalhe-section">☀️ Inspeção Diurna — Áreas Comuns</div>
-    ${[
-      {nome:'🚪 Hall de Entrada',key:'hall'},
-      {nome:'🏊 Área de Lazer',key:'lazer'},
-      {nome:'🅿️ Garagem',key:'garagem'},
-      {nome:'🚶 Corredores',key:'corredor'},
-      {nome:'📍 '+(r.insp_outro_nome||'Outro Local'),key:'outro'},
-    ].filter(loc=>r['insp_'+loc.key]).map(loc=>{
-      const status=r['insp_'+loc.key];
-      const cor=status==='OK'?'var(--ok)':status==='Atenção'?'var(--accent)':status==='Irregular'?'var(--danger)':'var(--muted)';
-      const checks=(r['insp_'+loc.key+'_checks']||[]);
-      const obs=r['obs_'+loc.key]||'';
-      return \`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;margin-bottom:7px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <span style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:700;color:var(--accent2);">\${loc.nome}</span>
-          <span style="font-size:0.68rem;font-weight:700;color:\${cor};background:rgba(0,0,0,.2);border:1px solid \${cor};border-radius:10px;padding:1px 8px;">\${status}</span>
-        </div>
-        \${checks.length?'<div style="font-size:0.72rem;color:var(--ok);margin-bottom:4px;">✔ '+checks.join(' &nbsp;·&nbsp; ')+'</div>':''}
-        \${obs?'<div style="font-size:0.75rem;color:var(--muted);">'+obs+'</div>':''}
-      </div>\`;
-    }).join('')}
-    `:''}
-  `;
+
+  // Monta inspeção diurna sem template literal aninhado
+  function badgeInsp(status){
+    const cor = status==='OK' ? 'var(--ok)' : status==='Atenção' ? 'var(--accent)' : status==='Irregular' ? 'var(--danger)' : 'var(--muted)';
+    return '<span style="font-size:0.68rem;font-weight:700;color:'+cor+';background:rgba(0,0,0,.2);border:1px solid '+cor+';border-radius:10px;padding:1px 8px;">'+status+'</span>';
+  }
+
+  const locais = [
+    {nome:'🚪 Hall de Entrada', key:'hall'},
+    {nome:'🏊 Área de Lazer',   key:'lazer'},
+    {nome:'🅿️ Garagem',         key:'garagem'},
+    {nome:'🚶 Corredores',      key:'corredor'},
+    {nome:'📍 '+(r.insp_outro_nome||'Outro Local'), key:'outro'},
+  ];
+
+  let inspHtml = '';
+  locais.forEach(function(loc){
+    const status = r['insp_'+loc.key];
+    if(!status) return;
+    const checks = (r['insp_'+loc.key+'_checks'] || []);
+    const obs    = r['obs_'+loc.key] || '';
+    inspHtml += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;margin-bottom:7px;">';
+    inspHtml += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
+    inspHtml += '<span style="font-family:\'Rajdhani\',sans-serif;font-size:0.8rem;font-weight:700;color:var(--accent2);">'+loc.nome+'</span>';
+    inspHtml += badgeInsp(status);
+    inspHtml += '</div>';
+    if(checks.length) inspHtml += '<div style="font-size:0.72rem;color:var(--ok);margin-bottom:4px;">✔ '+checks.join(' · ')+'</div>';
+    if(obs)           inspHtml += '<div style="font-size:0.75rem;color:var(--muted);">'+obs+'</div>';
+    inspHtml += '</div>';
+  });
+
+  let html = '';
+  html += '<div class="detalhe-section">Identificação</div>';
+  html += '<div class="detalhe-grid">';
+  html += '<div class="detalhe-item"><div class="d-lbl">Data</div><div class="d-val">'+dataFmt+' '+(r.hora||'')+'</div></div>';
+  html += '<div class="detalhe-item"><div class="d-lbl">Posto</div><div class="d-val">'+(r.posto||'—')+'</div></div>';
+  html += '<div class="detalhe-item"><div class="d-lbl">Supervisor</div><div class="d-val">'+(r.supervisor||'—')+'</div></div>';
+  html += '<div class="detalhe-item"><div class="d-lbl">Colaborador</div><div class="d-val">'+(r.colaborador||'—')+(r.funcao?' ('+r.funcao+')':'')+'</div></div>';
+  html += '<div class="detalhe-item"><div class="d-lbl">Turno</div><div class="d-val">'+(r.turno||'—')+'</div></div>';
+  html += '<div class="detalhe-item"><div class="d-lbl">Situação</div><div class="d-val">'+badgeSit(r.situacao)+'</div></div>';
+  html += '</div>';
+
+  html += '<div class="detalhe-section">Equipamentos e Ronda</div>';
+  html += '<div class="detalhe-grid">';
+  html += '<div class="detalhe-item"><div class="d-lbl">PC</div><div class="d-val">'+(r.pc||'—')+'</div></div>';
+  html += '<div class="detalhe-item"><div class="d-lbl">Câmeras</div><div class="d-val">'+(r.cameras||'—')+'</div></div>';
+  html += '<div class="detalhe-item"><div class="d-lbl">Cancela</div><div class="d-val">'+(r.cancela||'—')+'</div></div>';
+  html += '<div class="detalhe-item"><div class="d-lbl">Geladeira</div><div class="d-val">'+(r.geladeira||'—')+'</div></div>';
+  html += '<div class="detalhe-item"><div class="d-lbl">Micro-ondas</div><div class="d-val">'+(r.microondas||'—')+'</div></div>';
+  html += '<div class="detalhe-item"><div class="d-lbl">Ronda</div><div class="d-val">'+(r.ronda||'—')+'</div></div>';
+  html += '</div>';
+
+  if(inspHtml){
+    html += '<div class="detalhe-section">☀️ Inspeção Diurna — Áreas Comuns</div>';
+    html += inspHtml;
+  }
+
+  if(r.obs_uniforme){
+    html += '<div class="detalhe-section">Observações — Uniforme</div>';
+    html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">'+r.obs_uniforme+'</div>';
+  }
+  if(r.obs_geral){
+    html += '<div class="detalhe-section">Observações Gerais</div>';
+    html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">'+r.obs_geral+'</div>';
+  }
+  if(r.providencias){
+    html += '<div class="detalhe-section">Providências</div>';
+    html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">'+r.providencias+'</div>';
+  }
+
+  document.getElementById('detalhe-content').innerHTML = html;
   document.getElementById('modal-detalhe').classList.add('open');
 }
 
