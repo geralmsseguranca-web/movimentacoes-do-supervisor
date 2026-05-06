@@ -2225,6 +2225,22 @@ function salvarRegistro(){
     obs_geral:       v('obs_geral'),
     providencias:    v('providencias'),
     turnoId:         ta ? ta.id : null,
+    // Inspeção Diurna
+    insp_hall:       r('insp_hall'),
+    insp_hall_checks: ['hall_c1','hall_c2','hall_c3','hall_c4','hall_c5','hall_c6'].filter(id=>{const el=document.getElementById(id);return el&&el.checked;}).map(id=>(document.querySelector('label[for="'+id+'"]')||{}).textContent||id),
+    obs_hall:        v('obs_hall'),
+    insp_lazer:      r('insp_lazer'),
+    insp_lazer_checks: ['lazer_c1','lazer_c2','lazer_c3','lazer_c4','lazer_c5','lazer_c6','lazer_c7','lazer_c8'].filter(id=>{const el=document.getElementById(id);return el&&el.checked;}).map(id=>(document.querySelector('label[for="'+id+'"]')||{}).textContent||id),
+    obs_lazer:       v('obs_lazer'),
+    insp_garagem:    r('insp_garagem'),
+    insp_garagem_checks: ['gar_c1','gar_c2','gar_c3','gar_c4','gar_c5','gar_c6'].filter(id=>{const el=document.getElementById(id);return el&&el.checked;}).map(id=>(document.querySelector('label[for="'+id+'"]')||{}).textContent||id),
+    obs_garagem:     v('obs_garagem'),
+    insp_corredor:   r('insp_corredor'),
+    insp_corredor_checks: ['cor_c1','cor_c2','cor_c3','cor_c4'].filter(id=>{const el=document.getElementById(id);return el&&el.checked;}).map(id=>(document.querySelector('label[for="'+id+'"]')||{}).textContent||id),
+    obs_corredor:    v('obs_corredor'),
+    insp_outro:      r('insp_outro'),
+    insp_outro_nome: v('outro_nome'),
+    obs_outro:       v('obs_outro'),
   };
 
   // ── Salva no localStorage (fonte única da verdade) ──
@@ -2817,6 +2833,29 @@ function verDetalhes(id){
     </div>
     ${r.obs_geral?`<div class="detalhe-section">Observações</div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">${r.obs_geral}</div>`:''}
     ${r.providencias?`<div class="detalhe-section">Providências</div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">${r.providencias}</div>`:''}
+    ${(r.insp_hall||r.insp_lazer||r.insp_garagem||r.insp_corredor||r.insp_outro)?`
+    <div class="detalhe-section">☀️ Inspeção Diurna — Áreas Comuns</div>
+    ${[
+      {nome:'🚪 Hall de Entrada',key:'hall'},
+      {nome:'🏊 Área de Lazer',key:'lazer'},
+      {nome:'🅿️ Garagem',key:'garagem'},
+      {nome:'🚶 Corredores',key:'corredor'},
+      {nome:'📍 '+(r.insp_outro_nome||'Outro Local'),key:'outro'},
+    ].filter(loc=>r['insp_'+loc.key]).map(loc=>{
+      const status=r['insp_'+loc.key];
+      const cor=status==='OK'?'var(--ok)':status==='Atenção'?'var(--accent)':status==='Irregular'?'var(--danger)':'var(--muted)';
+      const checks=(r['insp_'+loc.key+'_checks']||[]);
+      const obs=r['obs_'+loc.key]||'';
+      return \`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;margin-bottom:7px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-family:'Rajdhani',sans-serif;font-size:0.8rem;font-weight:700;color:var(--accent2);">\${loc.nome}</span>
+          <span style="font-size:0.68rem;font-weight:700;color:\${cor};background:rgba(0,0,0,.2);border:1px solid \${cor};border-radius:10px;padding:1px 8px;">\${status}</span>
+        </div>
+        \${checks.length?'<div style="font-size:0.72rem;color:var(--ok);margin-bottom:4px;">✔ '+checks.join(' &nbsp;·&nbsp; ')+'</div>':''}
+        \${obs?'<div style="font-size:0.75rem;color:var(--muted);">'+obs+'</div>':''}
+      </div>\`;
+    }).join('')}
+    `:''}
   `;
   document.getElementById('modal-detalhe').classList.add('open');
 }
