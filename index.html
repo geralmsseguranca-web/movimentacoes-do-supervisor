@@ -60,7 +60,9 @@
       (snap) => {
         const arr = snap.docs.map(d => d.data());
         localStorage.setItem('supervisorRegistros', JSON.stringify(arr));
+        // Atualiza tanto window.registros quanto a variável let do escopo global
         window.registros = arr;
+        if(typeof registros !== 'undefined') try { registros = arr; } catch(e){}
         if(typeof renderBanco === 'function') renderBanco();
         if(typeof renderRelatorio === 'function') renderRelatorio();
         if(typeof atualizarStats === 'function') atualizarStats();
@@ -106,6 +108,7 @@
         const arr = snap.docs.map(d => d.data());
         localStorage.setItem('supervisorTurnos', JSON.stringify(arr));
         window.turnos = arr;
+        if(typeof turnos !== 'undefined') try { turnos = arr; } catch(e){}
         if(typeof renderHistoricoTurnos === 'function') renderHistoricoTurnos();
         if(typeof renderTurnosBanco === 'function') renderTurnosBanco();
         if(typeof atualizarStats === 'function') atualizarStats();
@@ -127,41 +130,44 @@
   };
 
   // ══════════════════════════════════
-  // TURNOS ATIVOS (array — múltiplos simultâneos)
+  // TURNO ATIVO (documento único)
   // ══════════════════════════════════
-  window.fbSalvarTurnosAtivos = async function(arr){
+  window.fbSalvarTurnoAtivo = async function(turno){
     try {
-      await setDoc(doc(db,'meta','turnosAtivos'), { items: arr });
-    } catch(e){ console.warn('Firebase turnosAtivos:', e); }
+      if(turno) await setDoc(doc(db,'meta','turnoAtivo'), turno);
+      else       await deleteDoc(doc(db,'meta','turnoAtivo'));
+    } catch(e){ console.warn('Firebase turnoAtivo:', e); }
   };
 
-  // mantém compatibilidade com código legado que ainda chama fbSalvarTurnoAtivo
-  window.fbSalvarTurnoAtivo = async function(){ /* substituído por fbSalvarTurnosAtivos */ };
-
-  // ── Listener em tempo real para Turnos Ativos ──
+  // ── Listener em tempo real para Turno Ativo ──
   function iniciarListenerTurnoAtivo(){
     return onSnapshot(
-      doc(db,'meta','turnosAtivos'),
+      doc(db,'meta','turnoAtivo'),
       (snap) => {
-        const arr = snap.exists() ? (snap.data().items || []) : [];
-        localStorage.setItem('turnosAtivos', JSON.stringify(arr));
-        window.turnosAtivos = arr;
-        if(typeof renderTurnosAtivos === 'function') renderTurnosAtivos();
+        if(snap.exists()){
+          const t = snap.data();
+          localStorage.setItem('turnoAtivo', JSON.stringify(t));
+          window.turnoAtivo = t;
+        } else {
+          localStorage.removeItem('turnoAtivo');
+          window.turnoAtivo = null;
+        }
         if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
       },
-      (e) => console.warn('Firebase listener turnosAtivos:', e)
+      (e) => console.warn('Firebase listener turnoAtivo:', e)
     );
   }
 
   window.fbCarregarTurnoAtivo = async function(){
     try {
-      const snap = await getDoc(doc(db,'meta','turnosAtivos'));
-      const arr = snap.exists() ? (snap.data().items || []) : [];
-      localStorage.setItem('turnosAtivos', JSON.stringify(arr));
-      window.turnosAtivos = arr;
-      if(typeof renderTurnosAtivos === 'function') renderTurnosAtivos();
-      if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
-    } catch(e){ console.warn('Firebase load turnosAtivos:', e); }
+      const snap = await getDoc(doc(db,'meta','turnoAtivo'));
+      if(snap.exists()){
+        const t = snap.data();
+        localStorage.setItem('turnoAtivo', JSON.stringify(t));
+        window.turnoAtivo = t;
+        if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+      }
+    } catch(e){ console.warn('Firebase load turnoAtivo:', e); }
   };
 
   // ══════════════════════════════════
@@ -180,8 +186,13 @@
       (snap) => {
         if(!snap.exists()) return;
         const arr = snap.data().items || [];
+        // Garante que CADS já foi inicializado pelo script principal
         if(window.CADS && window.CADS[tipo]){
           localStorage.setItem(window.CADS[tipo].key, JSON.stringify(arr));
+        } else {
+          // Fallback: mapear chaves conhecidas
+          const keyMap = { supervisores:'cadSupervisores', colaboradores:'cadColaboradores', postos:'cadPostos' };
+          if(keyMap[tipo]) localStorage.setItem(keyMap[tipo], JSON.stringify(arr));
         }
         if(typeof atualizarSelectsFormulario === 'function') atualizarSelectsFormulario();
         if(typeof renderCadLista === 'function') renderCadLista(tipo);
@@ -256,8 +267,14 @@
   // ══════════════════════════════════
   window.addEventListener('load', async () => {
     setOnlineStatus(navigator.onLine);
-    // aguarda o app principal inicializar
-    await new Promise(r => setTimeout(r, 300));
+
+    // Aguarda o app principal (CADS e funções de render) estar disponível.
+    // Usa polling em vez de setTimeout fixo para evitar race conditions.
+    await new Promise(r => {
+      const check = () => (typeof window.CADS !== 'undefined' && typeof renderBanco === 'function')
+        ? r() : setTimeout(check, 50);
+      check();
+    });
 
     // Ativa listeners em tempo real (onSnapshot) para todas as coleções.
     // Cada listener dispara imediatamente com os dados atuais e depois
@@ -504,7 +521,6 @@
   .km-banner span { font-size: 1.1rem; font-weight: 700; color: #fff; }
 
   /* KM TURNO CARD — destaque visual */
-  .enc-card .km-title { display: flex; align-items: center; }
   .km-turno-card {
     background: linear-gradient(135deg, var(--surface2) 0%, var(--surface3) 100%);
     border: 1px solid var(--accent);
@@ -1015,8 +1031,49 @@
     </div>
   </div>
 
-  <!-- TURNOS ATIVOS — cards dinâmicos, um por supervisor -->
-  <div id="turnos-ativos-container"></div>
+  <!-- TURNO ABERTO - ENCERRAMENTO -->
+  <div id="card-encerramento" style="display:none;">
+    <div class="km-turno-card" style="border-color:var(--ok);">
+      <div class="km-title" style="color:var(--ok);">🔴 Encerramento de Turno</div>
+
+      <!-- Resumo do turno aberto -->
+      <div id="resumo-turno" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:10px;font-size:0.8rem;"></div>
+
+      <div class="row">
+        <div class="field">
+          <label>Data Encerramento</label>
+          <input type="date" id="t_data_fim">
+        </div>
+        <div class="field">
+          <label>Hora Encerramento</label>
+          <input type="time" id="t_hora_fim">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>KM Final (odômetro ao retornar)</label>
+          <input type="number" id="t_km_fim" placeholder="Ex.: 12530" min="0" oninput="calcKmPreview()" style="font-size:1.05rem;font-weight:700;letter-spacing:0.5px;">
+        </div>
+        <div class="field">
+          <label>Observação Final</label>
+          <input type="text" id="t_obs_fim" placeholder="Ocorrências, nível de combustível...">
+        </div>
+      </div>
+
+      <div id="km-preview" style="display:none" class="km-display">
+        <div class="km-box"><div class="km-label">KM Inicial</div><div class="km-val" id="kp_ini">—</div></div>
+        <div class="km-arrow">→</div>
+        <div class="km-box"><div class="km-label">KM Final</div><div class="km-val" id="kp_fim">—</div></div>
+        <div class="km-arrow">=</div>
+        <div class="km-box km-diff-box"><div class="km-label">Percorridos</div><div class="km-val" id="kp_diff">—</div></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="encerrarTurno()" style="flex:1;justify-content:center;display:flex;align-items:center;gap:6px;">🔴 Encerrar Turno</button>
+        <button class="btn btn-outline" onclick="cancelarAbertura()">Cancelar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- MINI STATS DO TURNO -->
   <div id="turno-mini-stats" style="display:none;margin-bottom:10px;">
@@ -1221,6 +1278,45 @@
             <input class="rating-opt rating-na" type="radio" name="microondas" id="mic_na" value="N/A"><label for="mic_na">N/A</label>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VTR DO SUPERVISOR -->
+  <div class="card">
+    <div class="card-title">🚗 VTR do Supervisor</div>
+    <div class="row three">
+      <div class="field">
+        <label>Placa da VTR</label>
+        <select id="vtr_placa">
+          <option value="">— Selecione —</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>KM Inicial</label>
+        <input type="number" id="vtr_km_ini" placeholder="0" oninput="calcKm()">
+      </div>
+      <div class="field">
+        <label>KM Final</label>
+        <input type="number" id="vtr_km_fim" placeholder="0" oninput="calcKm()">
+      </div>
+    </div>
+    <div id="km_resultado" style="display:none;background:rgba(63,182,138,.08);border:1px solid rgba(63,182,138,.3);border-radius:6px;padding:8px 12px;margin-bottom:8px;gap:10px;align-items:center;font-family:'Rajdhani',sans-serif;font-size:0.85rem;">
+      <span><span style="color:var(--muted)">KM Ini:</span> <strong id="km_ini_show">—</strong></span>
+      <span style="color:var(--muted)">→</span>
+      <span><span style="color:var(--muted)">KM Fim:</span> <strong id="km_fim_show">—</strong></span>
+      <span style="color:var(--muted)">=</span>
+      <span style="color:var(--ok);font-weight:700;" id="km_diff">—</span>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Estado da VTR</label>
+        <select id="vtr_estado">
+          <option value="">— Selecione —</option>
+          <option>✅ OK — Sem avarias</option>
+          <option>⚠️ Pequenas avarias</option>
+          <option>🔴 Avarias graves</option>
+        </select>
       </div>
     </div>
   </div>
@@ -1670,7 +1766,6 @@ window.addEventListener('load', () => {
   document.getElementById('t_data_fim').value = dateStr;
   document.getElementById('t_hora_fim').value = timeStr;
   atualizarSelectPlacas();
-  renderTurnosAtivos();
   renderHistoricoTurnos();
   atualizarStatusTurno();
   renderTurnosBanco();
@@ -1732,6 +1827,12 @@ function adicionarPlaca(){
   if(placas.includes(val)){ alert('Placa já cadastrada.'); return; }
   placas.push(val);
   localStorage.setItem('vtrPlacas', JSON.stringify(placas));
+  // Sincronizar com Firebase via cadVeiculos
+  const veiculos = getVeiculos();
+  if(!veiculos.find(v=>v.placa===val)){
+    veiculos.push({placa:val, tipo:'Carro'});
+    salvarVeiculos(veiculos);
+  }
   inp.value = '';
   atualizarSelectPlacas();
   renderListaPlacasModal();
@@ -1740,8 +1841,12 @@ function adicionarPlaca(){
 
 function removerPlaca(i){
   if(!confirm(`Remover a placa "${placas[i]}"?`)) return;
+  const placa = placas[i];
   placas.splice(i,1);
   localStorage.setItem('vtrPlacas', JSON.stringify(placas));
+  // Sincronizar com Firebase via cadVeiculos
+  const veiculos = getVeiculos().filter(v => v.placa !== placa);
+  salvarVeiculos(veiculos);
   atualizarSelectPlacas();
   renderListaPlacasModal();
   atualizarStats();
@@ -1759,188 +1864,83 @@ document.getElementById('modal-placas').addEventListener('click',function(e){
 });
 
 // ══════════════════════════════════════════
-// TURNO / KM  —  múltiplos turnos simultâneos
+// TURNO / KM
 // ══════════════════════════════════════════
 let turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
-
-// Migração: se existia turnoAtivo (singular), importa para o array
-(function migrarTurnoAtivo(){
-  const legado = localStorage.getItem('turnoAtivo');
-  if(!legado) return;
-  try {
-    const t = JSON.parse(legado);
-    if(t && t.id){
-      let ativos = JSON.parse(localStorage.getItem('turnosAtivos') || '[]');
-      if(!ativos.find(x => x.id === t.id)) ativos.push(t);
-      localStorage.setItem('turnosAtivos', JSON.stringify(ativos));
-    }
-  } catch(e){}
-  localStorage.removeItem('turnoAtivo');
-})();
-
-let turnosAtivos = JSON.parse(localStorage.getItem('turnosAtivos') || '[]');
-
-// ── renderiza um card de encerramento para cada turno ativo ──
-function renderTurnosAtivos(){
-  turnosAtivos = JSON.parse(localStorage.getItem('turnosAtivos') || '[]');
-  const container = document.getElementById('turnos-ativos-container');
-  if(!container) return;
-
-  if(!turnosAtivos.length){ container.innerHTML = ''; return; }
-
-  const agora = new Date();
-  const dataHoje  = agora.toISOString().slice(0,10);
-  const horaAgora = agora.toTimeString().slice(0,5);
-
-  container.innerHTML = turnosAtivos.map(t => `
-    <div class="km-turno-card enc-card" id="enc-card-${t.id}" style="border-color:var(--ok);margin-bottom:10px;">
-      <div class="km-title" style="color:var(--ok);">
-        🔴 Encerrar Turno
-        <span style="margin-left:auto;font-size:0.75rem;color:var(--accent2);font-weight:700;letter-spacing:.5px;">${t.supervisor}</span>
-      </div>
-
-      <!-- Resumo -->
-      <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:10px;font-size:0.8rem;">
-        <strong style="color:var(--accent2)">${t.supervisor}</strong> &nbsp;|&nbsp;
-        VTR: <strong>${t.placa}</strong> (${t.tipo||'—'}) &nbsp;|&nbsp;
-        Saída: <strong>${t.dataIni} ${t.horaIni}</strong> &nbsp;|&nbsp;
-        KM Ini: <strong style="color:var(--ok)">${(t.kmIni||0).toLocaleString('pt-BR')}</strong>
-        ${t.obsIni ? `<br><span style="color:var(--muted);font-size:0.75rem">Obs: ${t.obsIni}</span>` : ''}
-      </div>
-
-      <div class="row">
-        <div class="field">
-          <label>Data Encerramento</label>
-          <input type="date" id="t_data_fim_${t.id}" value="${dataHoje}">
-        </div>
-        <div class="field">
-          <label>Hora Encerramento</label>
-          <input type="time" id="t_hora_fim_${t.id}" value="${horaAgora}">
-        </div>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>KM Final (odômetro ao retornar)</label>
-          <input type="number" id="t_km_fim_${t.id}" placeholder="Ex.: 12530" min="0"
-            oninput="calcKmPreviewId('${t.id}', ${t.kmIni})"
-            style="font-size:1.05rem;font-weight:700;letter-spacing:0.5px;">
-        </div>
-        <div class="field">
-          <label>Observação Final</label>
-          <input type="text" id="t_obs_fim_${t.id}" placeholder="Ocorrências, combustível...">
-        </div>
-      </div>
-
-      <div id="km-preview-${t.id}" style="display:none" class="km-display">
-        <div class="km-box">
-          <div class="km-label">KM Inicial</div>
-          <div class="km-val" id="kp_ini_${t.id}">${(t.kmIni||0).toLocaleString('pt-BR')}</div>
-        </div>
-        <div class="km-arrow">→</div>
-        <div class="km-box">
-          <div class="km-label">KM Final</div>
-          <div class="km-val" id="kp_fim_${t.id}">—</div>
-        </div>
-        <div class="km-arrow">=</div>
-        <div class="km-box km-diff-box">
-          <div class="km-label">Percorridos</div>
-          <div class="km-val" id="kp_diff_${t.id}">—</div>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-success" onclick="encerrarTurno('${t.id}')"
-          style="flex:1;justify-content:center;display:flex;align-items:center;gap:6px;">
-          🔴 Encerrar Turno de ${t.supervisor}
-        </button>
-        <button class="btn btn-danger btn-sm" onclick="cancelarTurno('${t.id}')" title="Cancelar sem registrar">✕ Cancelar</button>
-      </div>
-    </div>
-  `).join('');
-}
+let turnoAtivo = JSON.parse(localStorage.getItem('turnoAtivo') || 'null');
 
 function atualizarStatusTurno(){
-  const bar      = document.getElementById('turno-status-bar');
+  const bar = document.getElementById('turno-status-bar');
+  const cardAb = document.getElementById('card-abertura');
+  const cardEnc = document.getElementById('card-encerramento');
   const miniStats = document.getElementById('turno-mini-stats');
 
-  turnosAtivos = JSON.parse(localStorage.getItem('turnosAtivos') || '[]');
-
-  // Mini stats
-  const tList   = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
+  // Atualizar mini stats
+  const tList = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
   const regList = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
   const totalKm = tList.reduce((s,t)=>s+(t.kmPercorrido||0),0);
-  if(document.getElementById('ts-total'))  document.getElementById('ts-total').textContent  = regList.length;
-  if(document.getElementById('ts-km'))     document.getElementById('ts-km').textContent     = totalKm ? totalKm.toLocaleString('pt-BR')+' km' : '—';
+  if(document.getElementById('ts-total')) document.getElementById('ts-total').textContent = regList.length;
+  if(document.getElementById('ts-km')) document.getElementById('ts-km').textContent = totalKm ? totalKm.toLocaleString('pt-BR')+' km' : '—';
   if(document.getElementById('ts-turnos')) document.getElementById('ts-turnos').textContent = tList.length;
   if(miniStats) miniStats.style.display = (tList.length || regList.length) ? 'block' : 'none';
 
-  // Barra de status
-  if(turnosAtivos.length){
+  if(turnoAtivo){
     bar.className = 'turno-status aberto';
-    const nomes = turnosAtivos.map(t => t.supervisor).join(' · ');
-    bar.innerHTML = `🟢 ${turnosAtivos.length} turno(s) ABERTO(s) — ${nomes}`;
+    bar.innerHTML = `🟢 Turno ABERTO — ${turnoAtivo.supervisor} · ${turnoAtivo.placa} · KM Ini: <strong>${turnoAtivo.kmIni}</strong> · Início: ${turnoAtivo.dataIni} ${turnoAtivo.horaIni}`;
+    cardAb.style.display = 'none';
+    cardEnc.style.display = 'block';
+    document.getElementById('resumo-turno').innerHTML = `
+      <strong style="color:var(--accent2)">${turnoAtivo.supervisor}</strong> &nbsp;|&nbsp;
+      VTR: <strong>${turnoAtivo.placa}</strong> (${turnoAtivo.tipo||'—'}) &nbsp;|&nbsp;
+      Saída: <strong>${turnoAtivo.dataIni} ${turnoAtivo.horaIni}</strong> &nbsp;|&nbsp;
+      KM Ini: <strong style="color:var(--ok)">${turnoAtivo.kmIni}</strong>
+      ${turnoAtivo.obsIni ? `<br><span style="color:var(--muted);font-size:0.75rem">Obs: ${turnoAtivo.obsIni}</span>` : ''}
+    `;
   } else {
     bar.className = 'turno-status sem-turno';
     bar.innerHTML = '⏸ Nenhum turno em aberto — Abra um turno para iniciar a ronda.';
+    cardAb.style.display = 'block';
+    cardEnc.style.display = 'none';
   }
-
-  renderTurnosAtivos();
 }
 
 function abrirTurno(){
   const supervisor = document.getElementById('t_supervisor').value;
-  const placa      = document.getElementById('t_placa').value;
-  const kmIni      = parseInt(document.getElementById('t_km_ini').value)||0;
-  const dataIni    = document.getElementById('t_data_ini').value;
-  const horaIni    = document.getElementById('t_hora_ini').value;
+  const placa = document.getElementById('t_placa').value;
+  const kmIni = parseInt(document.getElementById('t_km_ini').value)||0;
+  const dataIni = document.getElementById('t_data_ini').value;
+  const horaIni = document.getElementById('t_hora_ini').value;
 
   if(!supervisor){ alert('Selecione o supervisor.'); return; }
-  if(!placa)     { alert('Selecione a placa da VTR.'); return; }
-  if(!kmIni)     { alert('Informe o KM inicial.'); return; }
+  if(!placa){ alert('Selecione a placa da VTR.'); return; }
+  if(!kmIni){ alert('Informe o KM inicial.'); return; }
   if(!dataIni || !horaIni){ alert('Informe data e hora de início.'); return; }
 
-  const novoTurno = {
+  turnoAtivo = {
     id: Date.now(),
     supervisor,
     placa,
-    tipo:   document.getElementById('t_tipo').value,
+    tipo: document.getElementById('t_tipo').value,
     kmIni,
     dataIni,
     horaIni,
     obsIni: document.getElementById('t_obs_ini').value,
   };
-
-  turnosAtivos.push(novoTurno);
-  localStorage.setItem('turnosAtivos', JSON.stringify(turnosAtivos));
-  if(typeof fbSalvarTurnosAtivos === 'function') fbSalvarTurnosAtivos(turnosAtivos);
-
-  // Limpar formulário imediatamente para o próximo
-  document.getElementById('t_supervisor').selectedIndex = 0;
-  document.getElementById('t_placa').selectedIndex = 0;
-  document.getElementById('t_tipo').selectedIndex = 0;
-  document.getElementById('t_km_ini').value = '';
-  document.getElementById('t_obs_ini').value = '';
-  const _agora = new Date();
-  document.getElementById('t_data_ini').value = _agora.toISOString().slice(0,10);
-  document.getElementById('t_hora_ini').value = _agora.toTimeString().slice(0,5);
-
+  localStorage.setItem('turnoAtivo', JSON.stringify(turnoAtivo));
+  if(typeof fbSalvarTurnoAtivo === 'function') fbSalvarTurnoAtivo(turnoAtivo);
   atualizarStatusTurno();
-  showToast('🟢 Turno de ' + supervisor + ' aberto!');
+  showToast('🟢 Turno aberto com sucesso!');
 }
 
-function encerrarTurno(id){
-  id = String(id);
-  const idx = turnosAtivos.findIndex(t => String(t.id) === id);
-  if(idx === -1){ alert('Turno não encontrado.'); return; }
-  const turnoAtivo = turnosAtivos[idx];
+function encerrarTurno(){
+  if(!turnoAtivo){ alert('Nenhum turno ativo.'); return; }
+  const kmFim = parseInt(document.getElementById('t_km_fim').value)||0;
+  const dataFim = document.getElementById('t_data_fim').value;
+  const horaFim = document.getElementById('t_hora_fim').value;
 
-  const kmFim   = parseInt(document.getElementById('t_km_fim_'+id).value)||0;
-  const dataFim = document.getElementById('t_data_fim_'+id).value;
-  const horaFim = document.getElementById('t_hora_fim_'+id).value;
-
-  if(!kmFim)                   { alert('Informe o KM final.'); return; }
+  if(!kmFim){ alert('Informe o KM final.'); return; }
   if(kmFim <= turnoAtivo.kmIni){ alert('KM Final deve ser maior que KM Inicial.'); return; }
-  if(!dataFim || !horaFim)     { alert('Informe data e hora de encerramento.'); return; }
+  if(!dataFim || !horaFim){ alert('Informe data e hora de encerramento.'); return; }
 
   const turnoCompleto = {
     ...turnoAtivo,
@@ -1948,57 +1948,49 @@ function encerrarTurno(id){
     dataFim,
     horaFim,
     kmPercorrido: kmFim - turnoAtivo.kmIni,
-    obsFim:  document.getElementById('t_obs_fim_'+id).value,
+    obsFim: document.getElementById('t_obs_fim').value,
     status: 'encerrado',
   };
 
-  // Remove do array de ativos e salva no histórico
-  turnosAtivos.splice(idx, 1);
-  localStorage.setItem('turnosAtivos', JSON.stringify(turnosAtivos));
-  if(typeof fbSalvarTurnosAtivos === 'function') fbSalvarTurnosAtivos(turnosAtivos);
-
   turnos.unshift(turnoCompleto);
   localStorage.setItem('supervisorTurnos', JSON.stringify(turnos));
+  localStorage.removeItem('turnoAtivo');
   if(typeof fbSalvarTurno === 'function') fbSalvarTurno(turnoCompleto);
+  if(typeof fbSalvarTurnoAtivo === 'function') fbSalvarTurnoAtivo(null);
+  turnoAtivo = null;
+
+  // Limpar campos encerramento
+  document.getElementById('t_km_fim').value = '';
+  document.getElementById('t_obs_fim').value = '';
+  document.getElementById('km-preview').style.display = 'none';
 
   atualizarStatusTurno();
   renderHistoricoTurnos();
   atualizarStats();
-  showToast('🔴 Turno de ' + turnoCompleto.supervisor + ' encerrado! ' + turnoCompleto.kmPercorrido + ' km');
+  showToast('🔴 Turno encerrado! KM: ' + turnoCompleto.kmPercorrido + ' km');
 }
 
-function cancelarTurno(id){
-  id = String(id);
-  const t = turnosAtivos.find(x => String(x.id) === id);
-  if(!t) return;
-  if(!confirm('Cancelar o turno de ' + t.supervisor + '? O registro será descartado.')) return;
-  turnosAtivos = turnosAtivos.filter(x => String(x.id) !== id);
-  localStorage.setItem('turnosAtivos', JSON.stringify(turnosAtivos));
-  if(typeof fbSalvarTurnosAtivos === 'function') fbSalvarTurnosAtivos(turnosAtivos);
+function cancelarAbertura(){
+  if(!confirm('Cancelar a abertura de turno? Os dados serão perdidos.')) return;
+  localStorage.removeItem('turnoAtivo');
+  if(typeof fbSalvarTurnoAtivo === 'function') fbSalvarTurnoAtivo(null);
+  turnoAtivo = null;
   atualizarStatusTurno();
-  showToast('Turno de ' + t.supervisor + ' cancelado.');
 }
 
-// mantém compatibilidade com chamadas antigas
-function cancelarAbertura(){ /* substituído por cancelarTurno(id) */ }
-
-function calcKmPreviewId(id, kmIni){
-  id = String(id);
-  const fim = parseInt(document.getElementById('t_km_fim_'+id).value)||0;
-  const box = document.getElementById('km-preview-'+id);
-  if(!box) return;
-  if(kmIni > 0 && fim > kmIni){
-    document.getElementById('kp_ini_'+id).textContent  = kmIni.toLocaleString('pt-BR');
-    document.getElementById('kp_fim_'+id).textContent  = fim.toLocaleString('pt-BR');
-    document.getElementById('kp_diff_'+id).textContent = (fim - kmIni).toLocaleString('pt-BR') + ' km';
+function calcKmPreview(){
+  const ini = turnoAtivo ? turnoAtivo.kmIni : 0;
+  const fim = parseInt(document.getElementById('t_km_fim').value)||0;
+  const box = document.getElementById('km-preview');
+  if(ini > 0 && fim > ini){
+    document.getElementById('kp_ini').textContent = ini.toLocaleString('pt-BR');
+    document.getElementById('kp_fim').textContent = fim.toLocaleString('pt-BR');
+    document.getElementById('kp_diff').textContent = (fim - ini).toLocaleString('pt-BR') + ' km';
     box.style.display = 'flex';
   } else {
     box.style.display = 'none';
   }
 }
-
-// alias legado (caso ainda haja chamadas de calcKmPreview sem id)
-function calcKmPreview(){ /* substituído por calcKmPreviewId */ }
 
 function renderHistoricoTurnos(){
   const wrap = document.getElementById('historico-turnos');
@@ -2089,25 +2081,46 @@ function salvarRegistro(){
     return;
   }
 
+  // Helper para leitura segura de elementos opcionais
+  const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+
+  const kmIni = parseInt(val('vtr_km_ini'))||0;
+  const kmFim = parseInt(val('vtr_km_fim'))||0;
+
   const reg = {
     id: Date.now(),
     data,
-    hora: document.getElementById('hora_visita').value,
+    hora: val('hora_visita'),
     posto, supervisor,
-    colaborador: document.getElementById('colaborador').value,
-    funcao: document.getElementById('funcao').value,
-    turno: document.getElementById('turno').value,
-    situacao: document.getElementById('situacao_geral').value,
-    ronda: document.getElementById('ronda_ok').value,
+    colaborador: val('colaborador'),
+    funcao: val('funcao'),
+    turno: val('turno'),
+    situacao: val('situacao_geral'),
+    // VTR do Supervisor
+    vtrPlaca: val('vtr_placa'),
+    vtrKmIni: kmIni || '',
+    vtrKmFim: kmFim || '',
+    vtrKmPercorrido: (kmIni > 0 && kmFim > kmIni) ? kmFim - kmIni : '',
+    vtrEstado: val('vtr_estado'),
+    // Ronda
+    ronda: val('ronda_ok'),
+    obs_ronda: val('obs_ronda'),
+    // Equipamentos
     pc: getRadioVal('pc'),
     cameras: getRadioVal('cameras'),
     cancela: getRadioVal('cancela'),
     geladeira: getRadioVal('geladeira'),
     microondas: getRadioVal('microondas'),
+    // Viatura do Posto
     viatura: getRadioVal('viatura_posto'),
-    viaturaTipo: document.getElementById('viatura_tipo').value,
-    obs_geral: document.getElementById('obs_geral').value,
-    providencias: document.getElementById('providencias').value,
+    viaturaTipo: val('viatura_tipo'),
+    viaturaPlaca: val('viatura_placa'),
+    obs_viatura: val('obs_viatura_posto'),
+    // Uniforme
+    obs_uniforme: val('obs_uniforme'),
+    // Geral
+    obs_geral: val('obs_geral'),
+    providencias: val('providencias'),
     turnoId: turnoAtivo ? turnoAtivo.id : null,
   };
 
