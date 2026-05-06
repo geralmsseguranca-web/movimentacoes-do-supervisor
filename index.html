@@ -1824,7 +1824,7 @@ function atualizarStatusTurno(){
   if(turnoAtivo){
     bar.className = 'turno-status aberto';
     bar.innerHTML = `🟢 Turno ABERTO — ${turnoAtivo.supervisor} · ${turnoAtivo.placa} · KM Ini: <strong>${turnoAtivo.kmIni}</strong> · Início: ${turnoAtivo.dataIni} ${turnoAtivo.horaIni}`;
-    cardAb.style.display = 'none';
+    cardAb.style.display = 'block';
     cardEnc.style.display = 'block';
     document.getElementById('resumo-turno').innerHTML = `
       <strong style="color:var(--accent2)">${turnoAtivo.supervisor}</strong> &nbsp;|&nbsp;
@@ -1866,7 +1866,18 @@ function abrirTurno(){
   localStorage.setItem('turnoAtivo', JSON.stringify(turnoAtivo));
   if(typeof fbSalvarTurnoAtivo === 'function') fbSalvarTurnoAtivo(turnoAtivo);
   atualizarStatusTurno();
-  showToast('🟢 Turno aberto com sucesso!');
+
+  // ── Limpar formulário de abertura imediatamente para o próximo supervisor ──
+  document.getElementById('t_supervisor').selectedIndex = 0;
+  document.getElementById('t_placa').selectedIndex = 0;
+  document.getElementById('t_tipo').selectedIndex = 0;
+  document.getElementById('t_km_ini').value = '';
+  document.getElementById('t_obs_ini').value = '';
+  const _agora = new Date();
+  document.getElementById('t_data_ini').value = _agora.toISOString().slice(0,10);
+  document.getElementById('t_hora_ini').value = _agora.toTimeString().slice(0,5);
+
+  showToast('🟢 Turno aberto! Formulário pronto para o próximo.');
 }
 
 function encerrarTurno(){
