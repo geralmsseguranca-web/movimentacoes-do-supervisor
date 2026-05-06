@@ -60,9 +60,6 @@
       (snap) => {
         const arr = snap.docs.map(d => d.data());
         localStorage.setItem('supervisorRegistros', JSON.stringify(arr));
-        // Atualiza tanto window.registros quanto a variável let do escopo global
-        window.registros = arr;
-        if(typeof registros !== 'undefined') try { registros = arr; } catch(e){}
         if(typeof renderBanco === 'function') renderBanco();
         if(typeof renderRelatorio === 'function') renderRelatorio();
         if(typeof atualizarStats === 'function') atualizarStats();
@@ -78,7 +75,6 @@
       const snap = await getDocs(query(collection(db,'registros'), orderBy('data','desc')));
       const arr = snap.docs.map(d => d.data());
       localStorage.setItem('supervisorRegistros', JSON.stringify(arr));
-      window.registros = arr;
       if(typeof renderBanco === 'function') renderBanco();
       if(typeof renderRelatorio === 'function') renderRelatorio();
       if(typeof atualizarStats === 'function') atualizarStats();
@@ -107,8 +103,6 @@
       (snap) => {
         const arr = snap.docs.map(d => d.data());
         localStorage.setItem('supervisorTurnos', JSON.stringify(arr));
-        window.turnos = arr;
-        if(typeof turnos !== 'undefined') try { turnos = arr; } catch(e){}
         if(typeof renderHistoricoTurnos === 'function') renderHistoricoTurnos();
         if(typeof renderTurnosBanco === 'function') renderTurnosBanco();
         if(typeof atualizarStats === 'function') atualizarStats();
@@ -122,7 +116,6 @@
       const snap = await getDocs(query(collection(db,'turnos'), orderBy('dataIni','desc')));
       const arr = snap.docs.map(d => d.data());
       localStorage.setItem('supervisorTurnos', JSON.stringify(arr));
-      window.turnos = arr;
       if(typeof renderHistoricoTurnos === 'function') renderHistoricoTurnos();
       if(typeof renderTurnosBanco === 'function') renderTurnosBanco();
       if(typeof atualizarStats === 'function') atualizarStats();
@@ -1872,18 +1865,6 @@ document.getElementById('modal-placas').addEventListener('click',function(e){
 let turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
 let turnoAtivo = JSON.parse(localStorage.getItem('turnoAtivo') || 'null');
 
-// Sincroniza variáveis locais com window (o Firebase listener escreve em window.*)
-Object.defineProperty(window, 'turnoAtivo', {
-  get(){ return turnoAtivo; },
-  set(v){ turnoAtivo = v; },
-  configurable: true
-});
-Object.defineProperty(window, 'turnos', {
-  get(){ return turnos; },
-  set(v){ turnos = v; },
-  configurable: true
-});
-
 function atualizarStatusTurno(){
   const bar = document.getElementById('turno-status-bar');
   const cardAb = document.getElementById('card-abertura');
@@ -1899,17 +1880,21 @@ function atualizarStatusTurno(){
   if(document.getElementById('ts-turnos')) document.getElementById('ts-turnos').textContent = tList.length;
   if(miniStats) miniStats.style.display = (tList.length || regList.length) ? 'block' : 'none';
 
-  if(turnoAtivo){
+  // Lê turnoAtivo direto do localStorage (fonte única da verdade)
+  const ta = JSON.parse(localStorage.getItem('turnoAtivo') || 'null');
+  turnoAtivo = ta; // sincroniza variável local
+
+  if(ta){
     bar.className = 'turno-status aberto';
-    bar.innerHTML = `🟢 Turno ABERTO — ${turnoAtivo.supervisor} · ${turnoAtivo.placa} · KM Ini: <strong>${turnoAtivo.kmIni}</strong> · Início: ${turnoAtivo.dataIni} ${turnoAtivo.horaIni}`;
+    bar.innerHTML = `🟢 Turno ABERTO — ${ta.supervisor} · ${ta.placa} · KM Ini: <strong>${ta.kmIni}</strong> · Início: ${ta.dataIni} ${ta.horaIni}`;
     cardAb.style.display = 'none';
     cardEnc.style.display = 'block';
     document.getElementById('resumo-turno').innerHTML = `
-      <strong style="color:var(--accent2)">${turnoAtivo.supervisor}</strong> &nbsp;|&nbsp;
-      VTR: <strong>${turnoAtivo.placa}</strong> (${turnoAtivo.tipo||'—'}) &nbsp;|&nbsp;
-      Saída: <strong>${turnoAtivo.dataIni} ${turnoAtivo.horaIni}</strong> &nbsp;|&nbsp;
-      KM Ini: <strong style="color:var(--ok)">${turnoAtivo.kmIni}</strong>
-      ${turnoAtivo.obsIni ? `<br><span style="color:var(--muted);font-size:0.75rem">Obs: ${turnoAtivo.obsIni}</span>` : ''}
+      <strong style="color:var(--accent2)">${ta.supervisor}</strong> &nbsp;|&nbsp;
+      VTR: <strong>${ta.placa}</strong> (${ta.tipo||'—'}) &nbsp;|&nbsp;
+      Saída: <strong>${ta.dataIni} ${ta.horaIni}</strong> &nbsp;|&nbsp;
+      KM Ini: <strong style="color:var(--ok)">${ta.kmIni}</strong>
+      ${ta.obsIni ? `<br><span style="color:var(--muted);font-size:0.75rem">Obs: ${ta.obsIni}</span>` : ''}
     `;
   } else {
     bar.className = 'turno-status sem-turno';
@@ -2009,6 +1994,7 @@ function calcKmPreview(){
 
 function renderHistoricoTurnos(){
   const wrap = document.getElementById('historico-turnos');
+  turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
   if(!turnos.length){
     wrap.innerHTML = '<div class="empty-state"><div class="big">🚗</div><p>Nenhum turno registrado ainda.</p></div>';
     return;
@@ -2083,93 +2069,95 @@ function calcKm(){
 // SALVAR VISTORIA
 // ══════════════════════════════════════════
 let registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
-Object.defineProperty(window, 'registros', {
-  get(){ return registros; },
-  set(v){ registros = v; },
-  configurable: true
-});
 
 function getRadioVal(name){ const r=document.querySelector(`input[name="${name}"]:checked`); return r?r.value:''; }
 
 function salvarRegistro(){
   try {
-    const posto = document.getElementById('posto').value;
-    const supervisor = document.getElementById('supervisor').value;
-    const data = document.getElementById('data_visita').value;
+    const posto      = document.getElementById('posto').value.trim();
+    const supervisor = document.getElementById('supervisor').value.trim();
+    const data       = document.getElementById('data_visita').value;
 
     if(!posto || !supervisor || !data){
       alert('Preencha pelo menos: Posto, Supervisor e Data.');
       return;
     }
 
-    // Helper para leitura segura de elementos opcionais
-    const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+    const v = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+    const r = name => { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : ''; };
 
-    const kmIni = parseInt(val('vtr_km_ini'))||0;
-    const kmFim = parseInt(val('vtr_km_fim'))||0;
+    const kmIni = parseInt(v('vtr_km_ini')) || 0;
+    const kmFim = parseInt(v('vtr_km_fim')) || 0;
 
-    // turnoAtivo pode vir da variável local OU do window (Firebase)
-    const taAtivo = (typeof turnoAtivo !== 'undefined' && turnoAtivo) || window.turnoAtivo || null;
+    // Lê turnoAtivo diretamente do localStorage (fonte única da verdade)
+    const ta = JSON.parse(localStorage.getItem('turnoAtivo') || 'null');
 
     const reg = {
-      id: Date.now(),
+      id:              Date.now(),
       data,
-      hora: val('hora_visita'),
-      posto, supervisor,
-      colaborador: val('colaborador'),
-      funcao: val('funcao'),
-      turno: val('turno'),
-      situacao: val('situacao_geral'),
-      vtrPlaca: val('vtr_placa'),
-      vtrKmIni: kmIni || '',
-      vtrKmFim: kmFim || '',
+      hora:            v('hora_visita'),
+      posto,           supervisor,
+      colaborador:     v('colaborador'),
+      funcao:          v('funcao'),
+      turno:           v('turno'),
+      situacao:        v('situacao_geral'),
+      vtrPlaca:        v('vtr_placa'),
+      vtrKmIni:        kmIni || '',
+      vtrKmFim:        kmFim || '',
       vtrKmPercorrido: (kmIni > 0 && kmFim > kmIni) ? kmFim - kmIni : '',
-      vtrEstado: val('vtr_estado'),
-      ronda: val('ronda_ok'),
-      obs_ronda: val('obs_ronda'),
-      pc: getRadioVal('pc'),
-      cameras: getRadioVal('cameras'),
-      cancela: getRadioVal('cancela'),
-      geladeira: getRadioVal('geladeira'),
-      microondas: getRadioVal('microondas'),
-      viatura: getRadioVal('viatura_posto'),
-      viaturaTipo: val('viatura_tipo'),
-      viaturaPlaca: val('viatura_placa'),
-      obs_viatura: val('obs_viatura_posto'),
-      obs_uniforme: val('obs_uniforme'),
-      obs_geral: val('obs_geral'),
-      providencias: val('providencias'),
-      turnoId: taAtivo ? taAtivo.id : null,
+      vtrEstado:       v('vtr_estado'),
+      ronda:           v('ronda_ok'),
+      obs_ronda:       v('obs_ronda'),
+      pc:              r('pc'),
+      cameras:         r('cameras'),
+      cancela:         r('cancela'),
+      geladeira:       r('geladeira'),
+      microondas:      r('microondas'),
+      viatura:         r('viatura_posto'),
+      viaturaTipo:     v('viatura_tipo'),
+      viaturaPlaca:    v('viatura_placa'),
+      obs_viatura:     v('obs_viatura_posto'),
+      obs_uniforme:    v('obs_uniforme'),
+      obs_geral:       v('obs_geral'),
+      providencias:    v('providencias'),
+      turnoId:         ta ? ta.id : null,
     };
 
-    registros.unshift(reg);
-    localStorage.setItem('supervisorRegistros', JSON.stringify(registros));
+    // Salva no localStorage (fonte única da verdade)
+    const lista = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+    lista.unshift(reg);
+    localStorage.setItem('supervisorRegistros', JSON.stringify(lista));
+    registros = lista; // atualiza variável local também
 
-    // Salvar no Firebase (assíncrono — não bloqueia)
-    if(typeof window.fbSalvarRegistro === 'function') window.fbSalvarRegistro(reg);
+    // Salva no Firebase (assíncrono, não bloqueia)
+    if(typeof window.fbSalvarRegistro === 'function'){
+      window.fbSalvarRegistro(reg).catch(e => console.warn('Firebase salvar:', e));
+    }
 
-    // Atualiza UI imediatamente
-    renderBanco();
+    // Atualiza UI
     renderRelatorio();
+    renderBanco();
     atualizarStats();
     showToast('💾 Vistoria salva com sucesso!');
 
-    // Feedback visual no botão
-    const btnSalvar = document.querySelector('#tab-vistoria .btn-primary');
-    if(btnSalvar){
-      const original = btnSalvar.innerHTML;
-      btnSalvar.innerHTML = '✅ Salvo!';
-      btnSalvar.style.background = 'var(--ok)';
-      btnSalvar.disabled = true;
+    // Feedback no botão
+    const btn = document.querySelector('#tab-vistoria .btn-primary');
+    if(btn){
+      const orig = btn.innerHTML;
+      btn.innerHTML = '✅ Salvo!';
+      btn.style.background = 'var(--ok)';
+      btn.style.color = '#06090e';
+      btn.disabled = true;
       setTimeout(() => {
-        btnSalvar.innerHTML = original;
-        btnSalvar.style.background = '';
-        btnSalvar.disabled = false;
-      }, 2000);
+        btn.innerHTML = orig;
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.disabled = false;
+      }, 2500);
     }
 
   } catch(err) {
-    console.error('Erro ao salvar vistoria:', err);
+    console.error('salvarRegistro erro:', err);
     alert('Erro ao salvar: ' + err.message);
   }
 }
@@ -2290,6 +2278,7 @@ function renderBanco(){
 
 function renderTurnosBanco(){
   const tbody = document.getElementById('turnos-tbody');
+  turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
   if(!turnos.length){
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted);">Nenhum turno registrado.</td></tr>`;
     return;
