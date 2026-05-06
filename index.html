@@ -1557,7 +1557,7 @@
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="salvarRegistro()">💾 Salvar Vistoria</button>
+    <button class="btn btn-primary" id="btn-salvar-vistoria" onclick="salvarRegistro()">💾 Salvar Vistoria</button>
     <button class="btn btn-outline" onclick="limparForm()">🗑️ Limpar</button>
   </div>
 
@@ -2073,92 +2073,96 @@ let registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
 function getRadioVal(name){ const r=document.querySelector(`input[name="${name}"]:checked`); return r?r.value:''; }
 
 function salvarRegistro(){
+  const posto      = document.getElementById('posto').value.trim();
+  const supervisor = document.getElementById('supervisor').value.trim();
+  const data       = document.getElementById('data_visita').value;
+
+  if(!posto || !supervisor || !data){
+    alert('Preencha pelo menos: Posto, Supervisor e Data.');
+    return;
+  }
+
+  const v = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const r = name => { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : ''; };
+
+  const kmIni = parseInt(v('vtr_km_ini')) || 0;
+  const kmFim = parseInt(v('vtr_km_fim')) || 0;
+
+  // Lê turnoAtivo diretamente do localStorage (fonte única da verdade)
+  const ta = JSON.parse(localStorage.getItem('turnoAtivo') || 'null');
+
+  const reg = {
+    id:              Date.now(),
+    data,
+    hora:            v('hora_visita'),
+    posto,           supervisor,
+    colaborador:     v('colaborador'),
+    funcao:          v('funcao'),
+    turno:           v('turno'),
+    situacao:        v('situacao_geral'),
+    vtrPlaca:        v('vtr_placa'),
+    vtrKmIni:        kmIni || '',
+    vtrKmFim:        kmFim || '',
+    vtrKmPercorrido: (kmIni > 0 && kmFim > kmIni) ? kmFim - kmIni : '',
+    vtrEstado:       v('vtr_estado'),
+    ronda:           v('ronda_ok'),
+    obs_ronda:       v('obs_ronda'),
+    pc:              r('pc'),
+    cameras:         r('cameras'),
+    cancela:         r('cancela'),
+    geladeira:       r('geladeira'),
+    microondas:      r('microondas'),
+    viatura:         r('viatura_posto'),
+    viaturaTipo:     v('viatura_tipo'),
+    viaturaPlaca:    v('viatura_placa'),
+    obs_viatura:     v('obs_viatura_posto'),
+    obs_uniforme:    v('obs_uniforme'),
+    obs_geral:       v('obs_geral'),
+    providencias:    v('providencias'),
+    turnoId:         ta ? ta.id : null,
+  };
+
+  // ── Salva no localStorage (fonte única da verdade) ──
   try {
-    const posto      = document.getElementById('posto').value.trim();
-    const supervisor = document.getElementById('supervisor').value.trim();
-    const data       = document.getElementById('data_visita').value;
-
-    if(!posto || !supervisor || !data){
-      alert('Preencha pelo menos: Posto, Supervisor e Data.');
-      return;
-    }
-
-    const v = id => { const el = document.getElementById(id); return el ? el.value : ''; };
-    const r = name => { const el = document.querySelector(`input[name="${name}"]:checked`); return el ? el.value : ''; };
-
-    const kmIni = parseInt(v('vtr_km_ini')) || 0;
-    const kmFim = parseInt(v('vtr_km_fim')) || 0;
-
-    // Lê turnoAtivo diretamente do localStorage (fonte única da verdade)
-    const ta = JSON.parse(localStorage.getItem('turnoAtivo') || 'null');
-
-    const reg = {
-      id:              Date.now(),
-      data,
-      hora:            v('hora_visita'),
-      posto,           supervisor,
-      colaborador:     v('colaborador'),
-      funcao:          v('funcao'),
-      turno:           v('turno'),
-      situacao:        v('situacao_geral'),
-      vtrPlaca:        v('vtr_placa'),
-      vtrKmIni:        kmIni || '',
-      vtrKmFim:        kmFim || '',
-      vtrKmPercorrido: (kmIni > 0 && kmFim > kmIni) ? kmFim - kmIni : '',
-      vtrEstado:       v('vtr_estado'),
-      ronda:           v('ronda_ok'),
-      obs_ronda:       v('obs_ronda'),
-      pc:              r('pc'),
-      cameras:         r('cameras'),
-      cancela:         r('cancela'),
-      geladeira:       r('geladeira'),
-      microondas:      r('microondas'),
-      viatura:         r('viatura_posto'),
-      viaturaTipo:     v('viatura_tipo'),
-      viaturaPlaca:    v('viatura_placa'),
-      obs_viatura:     v('obs_viatura_posto'),
-      obs_uniforme:    v('obs_uniforme'),
-      obs_geral:       v('obs_geral'),
-      providencias:    v('providencias'),
-      turnoId:         ta ? ta.id : null,
-    };
-
-    // Salva no localStorage (fonte única da verdade)
     const lista = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
     lista.unshift(reg);
     localStorage.setItem('supervisorRegistros', JSON.stringify(lista));
-    registros = lista; // atualiza variável local também
-
-    // Salva no Firebase (assíncrono, não bloqueia)
-    if(typeof window.fbSalvarRegistro === 'function'){
-      window.fbSalvarRegistro(reg).catch(e => console.warn('Firebase salvar:', e));
-    }
-
-    // Atualiza UI
-    renderRelatorio();
-    renderBanco();
-    atualizarStats();
-    showToast('💾 Vistoria salva com sucesso!');
-
-    // Feedback no botão
-    const btn = document.querySelector('#tab-vistoria .btn-primary');
-    if(btn){
-      const orig = btn.innerHTML;
-      btn.innerHTML = '✅ Salvo!';
-      btn.style.background = 'var(--ok)';
-      btn.style.color = '#06090e';
-      btn.disabled = true;
-      setTimeout(() => {
-        btn.innerHTML = orig;
-        btn.style.background = '';
-        btn.style.color = '';
-        btn.disabled = false;
-      }, 2500);
-    }
-
+    registros = lista;
   } catch(err) {
-    console.error('salvarRegistro erro:', err);
+    console.error('Erro ao salvar no localStorage:', err);
     alert('Erro ao salvar: ' + err.message);
+    return;
+  }
+
+  // ── Salva no Firebase de forma totalmente segura (assíncrono, nunca bloqueia) ──
+  try {
+    if(typeof window.fbSalvarRegistro === 'function'){
+      Promise.resolve(window.fbSalvarRegistro(reg))
+        .catch(e => console.warn('Firebase salvar:', e));
+    }
+  } catch(e) { console.warn('Firebase call error:', e); }
+
+  // ── Atualiza UI ──
+  try { renderRelatorio(); } catch(e) { console.warn('renderRelatorio:', e); }
+  try { renderBanco(); } catch(e) { console.warn('renderBanco:', e); }
+  try { atualizarStats(); } catch(e) { console.warn('atualizarStats:', e); }
+
+  showToast('💾 Vistoria salva com sucesso!');
+
+  // ── Feedback visual no botão ──
+  const btn = document.getElementById('btn-salvar-vistoria');
+  if(btn){
+    const orig = btn.innerHTML;
+    btn.innerHTML = '✅ Salvo!';
+    btn.style.background = 'var(--ok)';
+    btn.style.color = '#06090e';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.innerHTML = orig;
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.disabled = false;
+    }, 2500);
   }
 }
 
