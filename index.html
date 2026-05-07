@@ -71,12 +71,12 @@
         const arr = snap.docs.map(d => d.data());
         localStorage.setItem('supervisorRegistros', JSON.stringify(arr));
         if(typeof window.syncFlash === 'function') window.syncFlash();
-        if(typeof renderAbaAtiva === 'function') renderAbaAtiva();
+        if(typeof window.renderAbaAtiva === 'function') window.renderAbaAtiva();
         else {
-          if(typeof renderBanco === 'function') renderBanco();
-          if(typeof renderRelatorio === 'function') renderRelatorio();
-          if(typeof atualizarStats === 'function') atualizarStats();
-          if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+          if(typeof window.renderBanco === 'function') window.renderBanco();
+          if(typeof window.renderRelatorio === 'function') window.renderRelatorio();
+          if(typeof window.atualizarStats === 'function') window.atualizarStats();
+          if(typeof window.atualizarStatusTurno === 'function') window.atualizarStatusTurno();
         }
       },
       (e) => console.warn('Firebase listener registros:', e)
@@ -89,10 +89,10 @@
       const snap = await getDocs(query(collection(db,'registros'), orderBy('data','desc')));
       const arr = snap.docs.map(d => d.data());
       localStorage.setItem('supervisorRegistros', JSON.stringify(arr));
-      if(typeof renderBanco === 'function') renderBanco();
-      if(typeof renderRelatorio === 'function') renderRelatorio();
-      if(typeof atualizarStats === 'function') atualizarStats();
-      if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+      if(typeof window.renderBanco === 'function') window.renderBanco();
+      if(typeof window.renderRelatorio === 'function') window.renderRelatorio();
+      if(typeof window.atualizarStats === 'function') window.atualizarStats();
+      if(typeof window.atualizarStatusTurno === 'function') window.atualizarStatusTurno();
     } catch(e){ console.warn('Firebase load registros:', e); }
   };
 
@@ -117,12 +117,12 @@
       (snap) => {
         const arr = snap.docs.map(d => d.data());
         localStorage.setItem('supervisorTurnos', JSON.stringify(arr));
-        if(typeof renderAbaAtiva === 'function') renderAbaAtiva();
+        if(typeof window.renderAbaAtiva === 'function') window.renderAbaAtiva();
         else {
-          if(typeof renderHistoricoTurnos === 'function') renderHistoricoTurnos();
-          if(typeof renderTurnosBanco === 'function') renderTurnosBanco();
-          if(typeof atualizarStats === 'function') atualizarStats();
-          if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+          if(typeof window.renderHistoricoTurnos === 'function') window.renderHistoricoTurnos();
+          if(typeof window.renderTurnosBanco === 'function') window.renderTurnosBanco();
+          if(typeof window.atualizarStats === 'function') window.atualizarStats();
+          if(typeof window.atualizarStatusTurno === 'function') window.atualizarStatusTurno();
         }
       },
       (e) => console.warn('Firebase listener turnos:', e)
@@ -134,10 +134,10 @@
       const snap = await getDocs(query(collection(db,'turnos'), orderBy('dataIni','desc')));
       const arr = snap.docs.map(d => d.data());
       localStorage.setItem('supervisorTurnos', JSON.stringify(arr));
-      if(typeof renderHistoricoTurnos === 'function') renderHistoricoTurnos();
-      if(typeof renderTurnosBanco === 'function') renderTurnosBanco();
-      if(typeof atualizarStats === 'function') atualizarStats();
-      if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+      if(typeof window.renderHistoricoTurnos === 'function') window.renderHistoricoTurnos();
+      if(typeof window.renderTurnosBanco === 'function') window.renderTurnosBanco();
+      if(typeof window.atualizarStats === 'function') window.atualizarStats();
+      if(typeof window.atualizarStatusTurno === 'function') window.atualizarStatusTurno();
     } catch(e){ console.warn('Firebase load turnos:', e); }
   };
 
@@ -164,8 +164,8 @@
           localStorage.removeItem('turnoAtivo');
           window.turnoAtivo = null;
         }
-        if(typeof renderAbaAtiva === 'function') renderAbaAtiva();
-        else if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+        if(typeof window.renderAbaAtiva === 'function') window.renderAbaAtiva();
+        else if(typeof window.atualizarStatusTurno === 'function') window.atualizarStatusTurno();
       },
       (e) => console.warn('Firebase listener turnoAtivo:', e)
     );
@@ -178,7 +178,7 @@
         const t = snap.data();
         localStorage.setItem('turnoAtivo', JSON.stringify(t));
         window.turnoAtivo = t;
-        if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+        if(typeof window.atualizarStatusTurno === 'function') window.atualizarStatusTurno();
       }
     } catch(e){ console.warn('Firebase load turnoAtivo:', e); }
   };
@@ -207,9 +207,9 @@
           const keyMap = { supervisores:'cadSupervisores', colaboradores:'cadColaboradores', postos:'cadPostos' };
           if(keyMap[tipo]) localStorage.setItem(keyMap[tipo], JSON.stringify(arr));
         }
-        if(typeof atualizarSelectsFormulario === 'function') atualizarSelectsFormulario();
-        if(typeof renderCadLista === 'function') renderCadLista(tipo);
-        if(typeof renderAbaAtiva === 'function') renderAbaAtiva();
+        if(typeof window.atualizarSelectsFormulario === 'function') window.atualizarSelectsFormulario();
+        if(typeof window.renderCadLista === 'function') window.renderCadLista(tipo);
+        if(typeof window.renderAbaAtiva === 'function') window.renderAbaAtiva();
       },
       (e) => console.warn(`Firebase listener cad ${tipo}:`, e)
     );
@@ -225,11 +225,11 @@
           localStorage.setItem(window.CADS[tipo].key, JSON.stringify(arr));
         }
       }
-      if(typeof atualizarSelectsFormulario === 'function') atualizarSelectsFormulario();
-      if(typeof renderCadLista === 'function'){
-        renderCadLista('supervisores');
-        renderCadLista('colaboradores');
-        renderCadLista('postos');
+      if(typeof window.atualizarSelectsFormulario === 'function') window.atualizarSelectsFormulario();
+      if(typeof window.renderCadLista === 'function'){
+        window.renderCadLista('supervisores');
+        window.renderCadLista('colaboradores');
+        window.renderCadLista('postos');
       }
     } catch(e){ console.warn('Firebase load cads:', e); }
   };
@@ -254,9 +254,9 @@
         const placas = arr.map(v => v.placa);
         localStorage.setItem('vtrPlacas', JSON.stringify(placas));
         window.placas = placas;
-        if(typeof atualizarSelectPlacas === 'function') atualizarSelectPlacas();
-        if(typeof renderVeiculosLista === 'function') renderVeiculosLista();
-        if(typeof renderAbaAtiva === 'function') renderAbaAtiva();
+        if(typeof window.atualizarSelectPlacas === 'function') window.atualizarSelectPlacas();
+        if(typeof window.renderVeiculosLista === 'function') window.renderVeiculosLista();
+        if(typeof window.renderAbaAtiva === 'function') window.renderAbaAtiva();
       },
       (e) => console.warn('Firebase listener veiculos:', e)
     );
@@ -271,8 +271,8 @@
         const placas = arr.map(v => v.placa);
         localStorage.setItem('vtrPlacas', JSON.stringify(placas));
         window.placas = placas;
-        if(typeof atualizarSelectPlacas === 'function') atualizarSelectPlacas();
-        if(typeof renderVeiculosLista === 'function') renderVeiculosLista();
+        if(typeof window.atualizarSelectPlacas === 'function') window.atualizarSelectPlacas();
+        if(typeof window.renderVeiculosLista === 'function') window.renderVeiculosLista();
       }
     } catch(e){ console.warn('Firebase load veiculos:', e); }
   };
@@ -286,7 +286,7 @@
     // Aguarda o app principal (CADS e funções de render) estar disponível.
     // Usa polling em vez de setTimeout fixo para evitar race conditions.
     await new Promise(r => {
-      const check = () => (typeof window.CADS !== 'undefined' && typeof renderBanco === 'function')
+      const check = () => (typeof window.CADS !== 'undefined' && typeof window.renderBanco === 'function')
         ? r() : setTimeout(check, 50);
       check();
     });
@@ -305,7 +305,7 @@
     ];
 
     window._fbReady = true;
-    if(typeof showToast === 'function') showToast('☁️ Sincronização em tempo real ativa!');
+    if(typeof window.showToast === 'function') window.showToast('☁️ Sincronização em tempo real ativa!');
   });
 </script>
 <style>
@@ -3137,6 +3137,21 @@ function showToast(msg){
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
 }
+// ── Expõe funções ao escopo global (window) para o módulo Firebase acessar ──
+window.renderAbaAtiva         = renderAbaAtiva;
+window.renderBanco            = renderBanco;
+window.renderRelatorio        = renderRelatorio;
+window.renderRankingPostos    = renderRankingPostos;
+window.renderTurnosBanco      = renderTurnosBanco;
+window.renderHistoricoTurnos  = renderHistoricoTurnos;
+window.renderCadLista         = renderCadLista;
+window.renderVeiculosLista    = renderVeiculosLista;
+window.atualizarStats         = atualizarStats;
+window.atualizarStatusTurno   = atualizarStatusTurno;
+window.atualizarSelectsFormulario = atualizarSelectsFormulario;
+window.atualizarSelectPlacas  = atualizarSelectPlacas;
+window.showToast              = showToast;
+
 </script>
 </body>
 </html>
