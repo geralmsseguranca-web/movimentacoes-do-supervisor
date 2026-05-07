@@ -106,6 +106,7 @@
         if(typeof renderHistoricoTurnos === 'function') renderHistoricoTurnos();
         if(typeof renderTurnosBanco === 'function') renderTurnosBanco();
         if(typeof atualizarStats === 'function') atualizarStats();
+        if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
       },
       (e) => console.warn('Firebase listener turnos:', e)
     );
@@ -119,6 +120,7 @@
       if(typeof renderHistoricoTurnos === 'function') renderHistoricoTurnos();
       if(typeof renderTurnosBanco === 'function') renderTurnosBanco();
       if(typeof atualizarStats === 'function') atualizarStats();
+      if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
     } catch(e){ console.warn('Firebase load turnos:', e); }
   };
 
@@ -919,6 +921,61 @@
   .insp-foto-previews { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
   .insp-foto-previews img { width: 54px; height: 54px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); }
 
+  /* VISTORIA BLOQUEADA */
+  #vistoria-lock {
+    display: none;
+    position: sticky;
+    top: 56px; /* abaixo do header+tabs */
+    z-index: 50;
+    background: linear-gradient(135deg, rgba(8,12,18,.97) 0%, rgba(15,21,32,.97) 100%);
+    border: 1px solid rgba(90,171,255,.35);
+    border-radius: var(--radius);
+    padding: 28px 20px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  #vistoria-lock.visible { display: block; }
+  #vistoria-lock .lock-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  #vistoria-lock .lock-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--info);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  #vistoria-lock .lock-msg {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+    max-width: 340px;
+    margin: 0 auto 14px;
+  }
+  #vistoria-lock .lock-turno-info {
+    display: none;
+    background: rgba(232,168,56,.08);
+    border: 1px solid rgba(232,168,56,.3);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    color: var(--accent2);
+    margin-bottom: 14px;
+    max-width: 340px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  #vistoria-form-content {
+    transition: opacity .25s;
+  }
+  #vistoria-form-content.locked {
+    opacity: 0.18;
+    pointer-events: none;
+    user-select: none;
+    filter: blur(1px);
+  }
+
   @media (max-width: 520px) {
     .row { grid-template-columns: 1fr; }
     .row.three { grid-template-columns: 1fr 1fr; }
@@ -926,122 +983,6 @@
     .check-grid { grid-template-columns: 1fr; }
     .db-stats { grid-template-columns: repeat(2, 1fr); }
     .detalhe-grid { grid-template-columns: 1fr; }
-  }
-
-  /* ── BOTÃO FLUTUANTE DE VISTORIA ── */
-  #fab-vistoria {
-    position: fixed;
-    bottom: 24px;
-    right: 20px;
-    z-index: 250;
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border: none;
-    color: #06090e;
-    font-size: 1.5rem;
-    cursor: pointer;
-    box-shadow: 0 4px 18px rgba(240,179,64,.45), 0 2px 6px rgba(0,0,0,.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform .2s, box-shadow .2s;
-  }
-  #fab-vistoria:hover { transform: scale(1.1); box-shadow: 0 6px 24px rgba(240,179,64,.6); }
-  #fab-vistoria:active { transform: scale(0.95); }
-
-  /* Tooltip do FAB */
-  #fab-vistoria::before {
-    content: 'Nova Vistoria';
-    position: absolute;
-    right: 66px;
-    background: var(--surface);
-    color: var(--accent2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 5px 11px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .2s;
-  }
-  #fab-vistoria:hover::before { opacity: 1; }
-
-  /* ── MODAL DE VISTORIA ── */
-  #modal-vistoria {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.82);
-    z-index: 400;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 0;
-    overflow-y: auto;
-  }
-  #modal-vistoria.open { display: flex; }
-  #modal-vistoria-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px 12px 0 0;
-    width: 100%;
-    max-width: 640px;
-    margin-top: auto;
-    padding: 0 0 40px;
-    animation: slideUp .28s ease;
-    position: relative;
-  }
-  @keyframes slideUp {
-    from { transform: translateY(60px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-  }
-  #modal-vistoria-header {
-    position: sticky;
-    top: 0;
-    background: var(--surface);
-    border-bottom: 2px solid var(--accent);
-    border-radius: 12px 12px 0 0;
-    padding: 14px 16px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 10;
-  }
-  #modal-vistoria-header .mv-title {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    flex: 1;
-  }
-  #modal-vistoria-header button {
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-size: 1.3rem;
-    cursor: pointer;
-    padding: 2px 6px;
-    line-height: 1;
-    transition: color .2s;
-  }
-  #modal-vistoria-header button:hover { color: var(--danger); }
-  #modal-vistoria-body { padding: 14px 14px 0; }
-  #modal-vistoria-footer {
-    position: sticky;
-    bottom: 0;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    padding: 12px 14px;
-    display: flex;
-    gap: 8px;
   }
 </style>
 </head>
@@ -1060,33 +1001,34 @@
 </header>
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="showTab('turno',this)">🚗 Turno / KM</button>
+  <button class="tab-btn active" onclick="showTab('turno',this)">👥 Multi Turnos</button>
+  <button class="tab-btn" onclick="showTab('vistoria',this)">📋 Vistoria</button>
+  <button class="tab-btn" onclick="showTab('relatorio',this)">📊 Relatório</button>
   <button class="tab-btn" onclick="showTab('banco',this)">🗄️ Banco de Dados</button>
 </div>
 
 <div class="main">
 
-<!-- ══════════ TAB TURNO / KM ══════════ -->
+<!-- ══════════ TAB MULTI TURNOS ══════════ -->
 <div id="tab-turno" class="tab-panel active">
 
-  <!-- STATUS DO TURNO ATUAL -->
-  <div id="turno-status-bar" class="turno-status sem-turno">⏸ Nenhum turno em aberto</div>
+  <!-- MINI STATS DO TURNO -->
+  <div id="turno-mini-stats" style="display:none;margin-bottom:10px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+      <div class="stat-box"><div class="stat-val" id="ts-total">0</div><div class="stat-lbl">Vistorias</div></div>
+      <div class="stat-box"><div class="stat-val" id="ts-km">—</div><div class="stat-lbl">KM Percorridos</div></div>
+      <div class="stat-box"><div class="stat-val" id="ts-turnos">0</div><div class="stat-lbl">Turnos</div></div>
+    </div>
+  </div>
 
-  <!-- ABERTURA DE TURNO -->
-  <div class="km-turno-card" id="card-abertura">
-    <div class="km-title">🟢 Abertura de Turno</div>
-
-    <!-- Linha 1: Supervisor + Data + Hora -->
+  <!-- ABERTURA DE NOVO TURNO -->
+  <div class="km-turno-card" id="card-abertura-multi">
+    <div class="km-title">🟢 Abrir Turno</div>
     <div class="row three">
       <div class="field">
         <label>Supervisor</label>
         <select id="t_supervisor">
           <option value="">— Selecione —</option>
-          <option>Carlos Silva</option>
-          <option>Marcos Oliveira</option>
-          <option>Ana Lima</option>
-          <option>Roberto Santos</option>
-          <option>Fernanda Costa</option>
         </select>
       </div>
       <div class="field">
@@ -1098,8 +1040,6 @@
         <input type="time" id="t_hora_ini">
       </div>
     </div>
-
-    <!-- Linha 2: Placa + Tipo -->
     <div class="row">
       <div class="field">
         <label>Placa da VTR</label>
@@ -1121,83 +1061,29 @@
         </select>
       </div>
     </div>
-
-    <!-- Linha 3: KM + Obs -->
     <div class="row">
       <div class="field">
-        <label>KM Inicial (odômetro ao sair)</label>
+        <label>KM Inicial</label>
         <input type="number" id="t_km_ini" placeholder="Ex.: 12450" min="0" style="font-size:1.05rem;font-weight:700;letter-spacing:0.5px;">
       </div>
       <div class="field">
         <label>Observação Inicial</label>
-        <input type="text" id="t_obs_ini" placeholder="Estado da VTR, nível de combustível...">
+        <input type="text" id="t_obs_ini" placeholder="Estado da VTR, combustível...">
       </div>
     </div>
-
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="abrirTurno()" style="flex:1;justify-content:center;display:flex;align-items:center;gap:6px;font-size:0.92rem;">
+      <button class="btn btn-primary" onclick="abrirTurnoMulti()" style="flex:1;justify-content:center;display:flex;align-items:center;gap:6px;font-size:0.92rem;">
         🟢 Abrir Turno
       </button>
     </div>
   </div>
 
-  <!-- TURNO ABERTO - ENCERRAMENTO -->
-  <div id="card-encerramento" style="display:none;">
-    <div class="km-turno-card" style="border-color:var(--ok);">
-      <div class="km-title" style="color:var(--ok);">🔴 Encerramento de Turno</div>
-
-      <!-- Resumo do turno aberto -->
-      <div id="resumo-turno" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:10px;font-size:0.8rem;"></div>
-
-      <div class="row">
-        <div class="field">
-          <label>Data Encerramento</label>
-          <input type="date" id="t_data_fim">
-        </div>
-        <div class="field">
-          <label>Hora Encerramento</label>
-          <input type="time" id="t_hora_fim">
-        </div>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>KM Final (odômetro ao retornar)</label>
-          <input type="number" id="t_km_fim" placeholder="Ex.: 12530" min="0" oninput="calcKmPreview()" style="font-size:1.05rem;font-weight:700;letter-spacing:0.5px;">
-        </div>
-        <div class="field">
-          <label>Observação Final</label>
-          <input type="text" id="t_obs_fim" placeholder="Ocorrências, nível de combustível...">
-        </div>
-      </div>
-
-      <div id="km-preview" style="display:none" class="km-display">
-        <div class="km-box"><div class="km-label">KM Inicial</div><div class="km-val" id="kp_ini">—</div></div>
-        <div class="km-arrow">→</div>
-        <div class="km-box"><div class="km-label">KM Final</div><div class="km-val" id="kp_fim">—</div></div>
-        <div class="km-arrow">=</div>
-        <div class="km-box km-diff-box"><div class="km-label">Percorridos</div><div class="km-val" id="kp_diff">—</div></div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-success" onclick="encerrarTurno()" style="flex:1;justify-content:center;display:flex;align-items:center;gap:6px;">🔴 Encerrar Turno</button>
-        <button class="btn btn-outline" onclick="cancelarAbertura()">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MINI STATS DO TURNO -->
-  <div id="turno-mini-stats" style="display:none;margin-bottom:10px;">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-      <div class="stat-box"><div class="stat-val" id="ts-total">0</div><div class="stat-lbl">Vistorias</div></div>
-      <div class="stat-box"><div class="stat-val" id="ts-km">—</div><div class="stat-lbl">KM Percorridos</div></div>
-      <div class="stat-box"><div class="stat-val" id="ts-turnos">0</div><div class="stat-lbl">Turnos</div></div>
-    </div>
-  </div>
+  <!-- TURNOS ATIVOS SIMULTÂNEOS -->
+  <div id="turnos-ativos-wrap"></div>
 
   <!-- HISTÓRICO DE TURNOS -->
   <div class="card">
     <div class="card-title">📋 Histórico de Turnos</div>
-    <!-- Botões de exportação -->
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
       <button class="btn btn-outline btn-sm" onclick="exportarTurnosPDF()" style="border-color:var(--danger);color:var(--danger);">📄 PDF</button>
       <button class="btn btn-outline btn-sm" onclick="exportarTurnosExcel()" style="border-color:var(--ok);color:var(--ok);">📊 Excel</button>
@@ -1207,19 +1093,28 @@
     </div>
   </div>
 
-  <!-- RELATÓRIO DE VISTORIAS -->
-  <div class="card">
-    <div class="card-title">📊 Relatório de Vistorias</div>
-    <div id="relatorio-wrap">
-      <div class="empty-state"><div class="big">📋</div><p>Nenhum registro salvo ainda.</p></div>
-    </div>
-  </div>
-
 </div><!-- /tab-turno -->
 
 
 <!-- ══════════ TAB VISTORIA ══════════ -->
 <div id="tab-vistoria" class="tab-panel">
+
+  <!-- BLOQUEIO: exibido quando não há turno ativo -->
+  <div id="vistoria-lock">
+    <div class="lock-icon">🔒</div>
+    <div class="lock-title">Formulário Bloqueado</div>
+    <div class="lock-msg">
+      Nenhum turno em andamento.<br>
+      O supervisor deve <strong style="color:var(--accent)">abrir o turno</strong> na aba
+      <strong style="color:var(--accent)">👥 Multi Turnos</strong> para liberar o preenchimento.
+    </div>
+    <button class="btn btn-outline" onclick="showTab('turno', document.querySelector('.tab-btn'))">
+      👥 Ir para Multi Turnos
+    </button>
+  </div>
+
+  <!-- CONTEÚDO DO FORMULÁRIO (bloqueado via CSS quando sem turno) -->
+  <div id="vistoria-form-content">
 
   <!-- IDENTIFICAÇÃO -->
   <div class="card">
@@ -1398,15 +1293,6 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- campos VTR ocultos — mantidos no DOM para compatibilidade com salvarRegistro -->
-  <div style="display:none">
-    <select id="vtr_placa"></select>
-    <input type="number" id="vtr_km_ini">
-    <input type="number" id="vtr_km_fim">
-    <div id="km_resultado"><strong id="km_ini_show"></strong><strong id="km_fim_show"></strong><span id="km_diff"></span></div>
-    <select id="vtr_estado"></select>
   </div>
 
   <!-- VIATURA DO POSTO -->
@@ -1653,7 +1539,20 @@
     <button class="btn btn-outline" onclick="limparForm()">🗑️ Limpar</button>
   </div>
 
+</div><!-- /vistoria-form-content -->
+
 </div><!-- /tab-vistoria -->
+
+
+<!-- ══════════ TAB RELATÓRIO ══════════ -->
+<div id="tab-relatorio" class="tab-panel">
+  <div class="card">
+    <div class="card-title">Relatório de Vistorias</div>
+    <div id="relatorio-wrap">
+      <div class="empty-state"><div class="big">📋</div><p>Nenhum registro salvo ainda.</p></div>
+    </div>
+  </div>
+</div>
 
 
 <!-- ══════════ TAB BANCO DE DADOS ══════════ -->
@@ -1816,27 +1715,6 @@
   </div>
 </div>
 
-<!-- ── BOTÃO FLUTUANTE NOVA VISTORIA ── -->
-<button id="fab-vistoria" onclick="abrirModalVistoria()" title="Nova Vistoria">📋</button>
-
-<!-- ── MODAL DE VISTORIA ── -->
-<div id="modal-vistoria">
-  <div id="modal-vistoria-box">
-    <div id="modal-vistoria-header">
-      <span class="mv-title">📋 Nova Vistoria</span>
-      <button onclick="fecharModalVistoria()" title="Fechar">✕</button>
-    </div>
-    <div id="modal-vistoria-body">
-      <!-- conteúdo injetado via JS a partir do tab-vistoria -->
-    </div>
-    <div id="modal-vistoria-footer">
-      <button class="btn btn-primary" id="btn-salvar-vistoria-modal" onclick="salvarRegistro()" style="flex:1;">💾 Salvar Vistoria</button>
-      <button class="btn btn-outline" onclick="limparForm()">🗑️ Limpar</button>
-      <button class="btn btn-outline" onclick="fecharModalVistoria()">Fechar</button>
-    </div>
-  </div>
-</div>
-
 <div id="toast">✅ Salvo com sucesso!</div>
 
 <script>
@@ -1859,13 +1737,8 @@ window.addEventListener('load', () => {
   const timeStr = now.toTimeString().slice(0,5);
   document.getElementById('data_visita').value = dateStr;
   document.getElementById('hora_visita').value = timeStr;
-  document.getElementById('t_data_ini').value = dateStr;
-  document.getElementById('t_hora_ini').value = timeStr;
-  document.getElementById('t_data_fim').value = dateStr;
-  document.getElementById('t_hora_fim').value = timeStr;
   atualizarSelectPlacas();
   renderHistoricoTurnos();
-  renderRelatorio();
   atualizarStatusTurno();
   renderTurnosBanco();
   renderBanco();
@@ -1882,7 +1755,7 @@ function showTab(id, btn){
   document.getElementById('tab-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
   else document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.textContent.includes(id)) b.classList.add('active'); });
-  if(id==='turno') { renderRelatorio(); renderHistoricoTurnos(); atualizarStatusTurno(); }
+  if(id==='relatorio') renderRelatorio();
   if(id==='banco') { renderBanco(); renderTurnosBanco(); atualizarStats(); renderCadLista('supervisores'); renderCadLista('colaboradores'); renderCadLista('postos'); renderVeiculosLista(); }
 }
 
@@ -1963,63 +1836,171 @@ document.getElementById('modal-placas').addEventListener('click',function(e){
 });
 
 // ══════════════════════════════════════════
-// TURNO / KM
+// DEVICE ID — identifica o dispositivo que abriu o turno
+// ══════════════════════════════════════════
+(function(){
+  if(!localStorage.getItem('supervisorDeviceId')){
+    localStorage.setItem('supervisorDeviceId',
+      'dev_' + Date.now() + '_' + Math.random().toString(36).slice(2,8));
+  }
+  window.supervisorDeviceId = localStorage.getItem('supervisorDeviceId');
+})();
+
+// ══════════════════════════════════════════
+// MULTI TURNOS — vários supervisores simultâneos
 // ══════════════════════════════════════════
 let turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
-let turnoAtivo = JSON.parse(localStorage.getItem('turnoAtivo') || 'null');
+// turnoAtivo mantido por compatibilidade (representa qualquer turno ativo para liberar vistoria)
+let turnoAtivo = null;
+
+// Retorna array de turnos ativos ordenados do mais antigo para o mais recente
+function getTurnosAtivos(){
+  return JSON.parse(localStorage.getItem('supervisorTurnos') || '[]')
+    .filter(t => t.status !== 'encerrado')
+    .sort((a, b) => a.id - b.id);
+}
 
 function atualizarStatusTurno(){
-  const bar = document.getElementById('turno-status-bar');
-  const cardAb = document.getElementById('card-abertura');
-  const cardEnc = document.getElementById('card-encerramento');
   const miniStats = document.getElementById('turno-mini-stats');
+  const tList     = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
+  const regList   = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+  const totalKm   = tList.filter(t=>t.status==='encerrado').reduce((s,t)=>s+(t.kmPercorrido||0),0);
 
-  // Atualizar mini stats
-  const tList = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
-  const regList = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
-  const totalKm = tList.reduce((s,t)=>s+(t.kmPercorrido||0),0);
-  if(document.getElementById('ts-total')) document.getElementById('ts-total').textContent = regList.length;
-  if(document.getElementById('ts-km')) document.getElementById('ts-km').textContent = totalKm ? totalKm.toLocaleString('pt-BR')+' km' : '—';
-  if(document.getElementById('ts-turnos')) document.getElementById('ts-turnos').textContent = tList.length;
+  if(document.getElementById('ts-total'))  document.getElementById('ts-total').textContent  = regList.length;
+  if(document.getElementById('ts-km'))     document.getElementById('ts-km').textContent     = totalKm ? totalKm.toLocaleString('pt-BR')+' km' : '—';
+  if(document.getElementById('ts-turnos')) document.getElementById('ts-turnos').textContent = tList.filter(t=>t.status==='encerrado').length;
   if(miniStats) miniStats.style.display = (tList.length || regList.length) ? 'block' : 'none';
 
-  // Lê turnoAtivo direto do localStorage (fonte única da verdade)
-  const ta = JSON.parse(localStorage.getItem('turnoAtivo') || 'null');
-  turnoAtivo = ta; // sincroniza variável local
+  // Atualiza referência global para compatibilidade com lock da vistoria
+  const ativos = getTurnosAtivos();
+  turnoAtivo = ativos.length ? ativos[0] : null;
 
-  if(ta){
-    bar.className = 'turno-status aberto';
-    bar.innerHTML = `🟢 Turno ABERTO — ${ta.supervisor} · ${ta.placa} · KM Ini: <strong>${ta.kmIni}</strong> · Início: ${ta.dataIni} ${ta.horaIni}`;
-    cardAb.style.display = 'none';
-    cardEnc.style.display = 'block';
-    document.getElementById('resumo-turno').innerHTML = `
-      <strong style="color:var(--accent2)">${ta.supervisor}</strong> &nbsp;|&nbsp;
-      VTR: <strong>${ta.placa}</strong> (${ta.tipo||'—'}) &nbsp;|&nbsp;
-      Saída: <strong>${ta.dataIni} ${ta.horaIni}</strong> &nbsp;|&nbsp;
-      KM Ini: <strong style="color:var(--ok)">${ta.kmIni}</strong>
-      ${ta.obsIni ? `<br><span style="color:var(--muted);font-size:0.75rem">Obs: ${ta.obsIni}</span>` : ''}
-    `;
+  const lockEl = document.getElementById('vistoria-lock');
+  const formEl = document.getElementById('vistoria-form-content');
+  if(turnoAtivo){
+    if(lockEl) lockEl.classList.remove('visible');
+    if(formEl) formEl.classList.remove('locked');
   } else {
-    bar.className = 'turno-status sem-turno';
-    bar.innerHTML = '⏸ Nenhum turno em aberto — Abra um turno para iniciar a ronda.';
-    cardAb.style.display = 'block';
-    cardEnc.style.display = 'none';
+    if(lockEl) lockEl.classList.add('visible');
+    if(formEl) formEl.classList.add('locked');
+  }
+
+  renderTurnosAtivos();
+}
+
+function renderTurnosAtivos(){
+  const wrap  = document.getElementById('turnos-ativos-wrap');
+  if(!wrap) return;
+  const ativos = getTurnosAtivos();
+
+  if(!ativos.length){
+    wrap.innerHTML = '';
+    return;
+  }
+
+  wrap.innerHTML = ativos.map(t => {
+    const id = t.id;
+    const ini = new Date(t.dataIni+'T'+t.horaIni);
+    const agora = new Date();
+    const diffMin = Math.max(0, Math.round((agora - ini) / 60000));
+    const horas = Math.floor(diffMin/60), min = diffMin%60;
+    const durStr = `${horas}h${min>0?min+'min':''}`;
+    return `
+    <div class="km-turno-card" style="border-color:var(--ok);margin-bottom:10px;" id="card-ativo-${id}">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+        <div class="km-title" style="color:var(--ok);margin-bottom:0;">🟢 Turno em Andamento</div>
+        <span style="font-family:'Rajdhani',sans-serif;font-size:0.78rem;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:3px 8px;">⏱ ${durStr}</span>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:9px 12px;margin-bottom:10px;font-size:0.82rem;line-height:1.7;">
+        <strong style="color:var(--accent2);font-family:'Rajdhani',sans-serif;font-size:1rem;">${t.supervisor}</strong>
+        &nbsp;·&nbsp; 🚗 <strong>${t.placa}</strong>${t.tipo?' ('+t.tipo+')':''}
+        &nbsp;·&nbsp; Saída: <strong>${t.dataIni} ${t.horaIni}</strong>
+        &nbsp;·&nbsp; KM Ini: <strong style="color:var(--ok)">${(t.kmIni||0).toLocaleString('pt-BR')}</strong>
+        ${t.obsIni?`<br><span style="color:var(--muted);font-size:0.73rem;">Obs: ${t.obsIni}</span>`:''}
+      </div>
+      <!-- Encerramento -->
+      <div class="row">
+        <div class="field">
+          <label>Data Encerramento</label>
+          <input type="date" id="enc_data_${id}">
+        </div>
+        <div class="field">
+          <label>Hora Encerramento</label>
+          <input type="time" id="enc_hora_${id}">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>KM Final</label>
+          <input type="number" id="enc_km_${id}" placeholder="Ex.: 12530" min="0"
+            oninput="calcKmPreviewMulti(${id},${t.kmIni})"
+            style="font-size:1.05rem;font-weight:700;letter-spacing:0.5px;">
+        </div>
+        <div class="field">
+          <label>Observação Final</label>
+          <input type="text" id="enc_obs_${id}" placeholder="Ocorrências, combustível...">
+        </div>
+      </div>
+      <div id="km-preview-${id}" style="display:none" class="km-display">
+        <div class="km-box"><div class="km-label">KM Inicial</div><div class="km-val" id="kp_ini_${id}">${(t.kmIni||0).toLocaleString('pt-BR')}</div></div>
+        <div class="km-arrow">→</div>
+        <div class="km-box"><div class="km-label">KM Final</div><div class="km-val" id="kp_fim_${id}">—</div></div>
+        <div class="km-arrow">=</div>
+        <div class="km-box km-diff-box"><div class="km-label">Percorridos</div><div class="km-val" id="kp_diff_${id}">—</div></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="encerrarTurnoMulti(${id})" style="flex:1;justify-content:center;display:flex;align-items:center;gap:6px;">
+          🔴 Encerrar Turno
+        </button>
+        <button class="btn btn-danger btn-sm" onclick="cancelarTurnoMulti(${id})" style="padding:7px 12px;" title="Cancelar (remover sem encerrar)">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Preenche data/hora atual nos campos de encerramento
+  const now = new Date();
+  const ds = now.toISOString().slice(0,10);
+  const hs = now.toTimeString().slice(0,5);
+  ativos.forEach(t => {
+    const df = document.getElementById('enc_data_'+t.id);
+    const hf = document.getElementById('enc_hora_'+t.id);
+    if(df && !df.value) df.value = ds;
+    if(hf && !hf.value) hf.value = hs;
+  });
+}
+
+function calcKmPreviewMulti(id, kmIni){
+  const fim = parseInt(document.getElementById('enc_km_'+id).value)||0;
+  const box = document.getElementById('km-preview-'+id);
+  if(kmIni > 0 && fim > kmIni){
+    document.getElementById('kp_fim_'+id).textContent  = fim.toLocaleString('pt-BR');
+    document.getElementById('kp_diff_'+id).textContent = (fim-kmIni).toLocaleString('pt-BR')+' km';
+    box.style.display = 'flex';
+  } else {
+    box.style.display = 'none';
   }
 }
 
-function abrirTurno(){
+function abrirTurnoMulti(){
   const supervisor = document.getElementById('t_supervisor').value;
-  const placa = document.getElementById('t_placa').value;
-  const kmIni = parseInt(document.getElementById('t_km_ini').value)||0;
-  const dataIni = document.getElementById('t_data_ini').value;
-  const horaIni = document.getElementById('t_hora_ini').value;
+  const placa      = document.getElementById('t_placa').value;
+  const kmIni      = parseInt(document.getElementById('t_km_ini').value)||0;
+  const dataIni    = document.getElementById('t_data_ini').value;
+  const horaIni    = document.getElementById('t_hora_ini').value;
 
   if(!supervisor){ alert('Selecione o supervisor.'); return; }
-  if(!placa){ alert('Selecione a placa da VTR.'); return; }
-  if(!kmIni){ alert('Informe o KM inicial.'); return; }
+  if(!placa)     { alert('Selecione a placa da VTR.'); return; }
+  if(!kmIni)     { alert('Informe o KM inicial.'); return; }
   if(!dataIni || !horaIni){ alert('Informe data e hora de início.'); return; }
 
-  turnoAtivo = {
+  // Impede o mesmo supervisor abrir dois turnos simultâneos
+  const ativos = getTurnosAtivos();
+  if(ativos.find(t => t.supervisor === supervisor)){
+    alert('O supervisor ' + supervisor + ' já possui um turno em andamento.');
+    return;
+  }
+
+  const novoTurno = {
     id: Date.now(),
     supervisor,
     placa,
@@ -2028,84 +2009,91 @@ function abrirTurno(){
     dataIni,
     horaIni,
     obsIni: document.getElementById('t_obs_ini').value,
-  };
-  localStorage.setItem('turnoAtivo', JSON.stringify(turnoAtivo));
-  if(typeof fbSalvarTurnoAtivo === 'function') fbSalvarTurnoAtivo(turnoAtivo);
-  atualizarStatusTurno();
-  limparFormSilencioso();
-  showToast('🟢 Turno aberto com sucesso!');
-}
-
-function encerrarTurno(){
-  if(!turnoAtivo){ alert('Nenhum turno ativo.'); return; }
-  const kmFim = parseInt(document.getElementById('t_km_fim').value)||0;
-  const dataFim = document.getElementById('t_data_fim').value;
-  const horaFim = document.getElementById('t_hora_fim').value;
-
-  if(!kmFim){ alert('Informe o KM final.'); return; }
-  if(kmFim <= turnoAtivo.kmIni){ alert('KM Final deve ser maior que KM Inicial.'); return; }
-  if(!dataFim || !horaFim){ alert('Informe data e hora de encerramento.'); return; }
-
-  const turnoCompleto = {
-    ...turnoAtivo,
-    kmFim,
-    dataFim,
-    horaFim,
-    kmPercorrido: kmFim - turnoAtivo.kmIni,
-    obsFim: document.getElementById('t_obs_fim').value,
-    status: 'encerrado',
+    deviceId: window.supervisorDeviceId,
+    status: 'aberto',
   };
 
-  turnos.unshift(turnoCompleto);
+  turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
+  turnos.unshift(novoTurno);
   localStorage.setItem('supervisorTurnos', JSON.stringify(turnos));
-  localStorage.removeItem('turnoAtivo');
-  if(typeof fbSalvarTurno === 'function') fbSalvarTurno(turnoCompleto);
-  if(typeof fbSalvarTurnoAtivo === 'function') fbSalvarTurnoAtivo(null);
-  turnoAtivo = null;
+  if(typeof fbSalvarTurno === 'function') fbSalvarTurno(novoTurno);
 
-  // Limpar campos encerramento
-  document.getElementById('t_km_fim').value = '';
-  document.getElementById('t_obs_fim').value = '';
-  document.getElementById('km-preview').style.display = 'none';
+  // Limpar formulário
+  document.getElementById('t_supervisor').value = '';
+  document.getElementById('t_placa').value      = '';
+  document.getElementById('t_tipo').value       = '';
+  document.getElementById('t_km_ini').value     = '';
+  document.getElementById('t_obs_ini').value    = '';
+  const _n = new Date();
+  document.getElementById('t_data_ini').value = _n.toISOString().slice(0,10);
+  document.getElementById('t_hora_ini').value = _n.toTimeString().slice(0,5);
 
   atualizarStatusTurno();
   renderHistoricoTurnos();
   atualizarStats();
-  limparFormSilencioso();
-  showToast('🔴 Turno encerrado! KM: ' + turnoCompleto.kmPercorrido + ' km');
+  showToast('🟢 Turno de ' + supervisor + ' aberto!');
 }
 
-function cancelarAbertura(){
-  if(!confirm('Cancelar a abertura de turno? Os dados serão perdidos.')) return;
-  localStorage.removeItem('turnoAtivo');
-  if(typeof fbSalvarTurnoAtivo === 'function') fbSalvarTurnoAtivo(null);
-  turnoAtivo = null;
+function encerrarTurnoMulti(id){
+  turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
+  const idx = turnos.findIndex(t => t.id === id);
+  if(idx === -1){ alert('Turno não encontrado.'); return; }
+  const ta = turnos[idx];
+
+  const kmFim   = parseInt(document.getElementById('enc_km_'+id).value)||0;
+  const dataFim = document.getElementById('enc_data_'+id).value;
+  const horaFim = document.getElementById('enc_hora_'+id).value;
+  const obsFim  = document.getElementById('enc_obs_'+id).value;
+
+  if(!kmFim){ alert('Informe o KM final.'); return; }
+  if(kmFim <= ta.kmIni){ alert('KM Final deve ser maior que KM Inicial (' + ta.kmIni + ').'); return; }
+  if(!dataFim || !horaFim){ alert('Informe data e hora de encerramento.'); return; }
+
+  const turnoCompleto = {
+    ...ta,
+    kmFim,
+    dataFim,
+    horaFim,
+    kmPercorrido: kmFim - ta.kmIni,
+    obsFim,
+    status: 'encerrado',
+  };
+
+  turnos[idx] = turnoCompleto;
+  localStorage.setItem('supervisorTurnos', JSON.stringify(turnos));
+  if(typeof fbSalvarTurno === 'function') fbSalvarTurno(turnoCompleto);
+
   atualizarStatusTurno();
+  renderHistoricoTurnos();
+  atualizarStats();
+  showToast('🔴 Turno de ' + ta.supervisor + ' encerrado! KM: ' + turnoCompleto.kmPercorrido + ' km');
 }
 
-function calcKmPreview(){
-  const ini = turnoAtivo ? turnoAtivo.kmIni : 0;
-  const fim = parseInt(document.getElementById('t_km_fim').value)||0;
-  const box = document.getElementById('km-preview');
-  if(ini > 0 && fim > ini){
-    document.getElementById('kp_ini').textContent = ini.toLocaleString('pt-BR');
-    document.getElementById('kp_fim').textContent = fim.toLocaleString('pt-BR');
-    document.getElementById('kp_diff').textContent = (fim - ini).toLocaleString('pt-BR') + ' km';
-    box.style.display = 'flex';
-  } else {
-    box.style.display = 'none';
-  }
+function cancelarTurnoMulti(id){
+  if(!confirm('Remover este turno sem encerrar? Os dados serão perdidos.')) return;
+  turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
+  turnos = turnos.filter(t => t.id !== id);
+  localStorage.setItem('supervisorTurnos', JSON.stringify(turnos));
+  if(typeof fbExcluirTurno === 'function') fbExcluirTurno(id);
+  atualizarStatusTurno();
+  renderHistoricoTurnos();
+  atualizarStats();
+  showToast('🗑️ Turno removido.');
 }
+
+// stub mantido para compatibilidade com chamadas antigas
+function calcKmPreview(){}
 
 function renderHistoricoTurnos(){
   const wrap = document.getElementById('historico-turnos');
-  turnos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
-  if(!turnos.length){
-    wrap.innerHTML = '<div class="empty-state"><div class="big">🚗</div><p>Nenhum turno registrado ainda.</p></div>';
+  const todos = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
+  turnos = todos;
+  const encerrados = todos.filter(t => t.status === 'encerrado');
+  if(!encerrados.length){
+    wrap.innerHTML = '<div class="empty-state"><div class="big">🚗</div><p>Nenhum turno encerrado ainda.</p></div>';
     return;
   }
-  wrap.innerHTML = turnos.slice(0,10).map(t => {
-    const aberto = t.status !== 'encerrado';
+  wrap.innerHTML = encerrados.slice(0,10).map(t => {
     const duracao = (t.dataIni && t.horaIni && t.dataFim && t.horaFim) ? (() => {
       const ini = new Date(t.dataIni+'T'+t.horaIni);
       const fim = new Date(t.dataFim+'T'+t.horaFim);
@@ -2115,11 +2103,11 @@ function renderHistoricoTurnos(){
       return `${h}h${m>0?m+'min':''}`;
     })() : null;
     return `
-    <div style="background:var(--surface2);border:1px solid ${aberto?'rgba(232,168,56,.5)':'var(--border)'};border-radius:8px;padding:11px 13px;margin-bottom:8px;">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 13px;margin-bottom:8px;">
       <!-- Cabeçalho -->
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
         <div style="font-family:'Rajdhani',sans-serif;font-size:0.92rem;font-weight:700;color:var(--text);flex:1;min-width:120px;">${t.supervisor}</div>
-        <span class="badge ${aberto?'badge-at':'badge-ok'}">${aberto?'🟢 Aberto':'✅ Encerrado'}</span>
+        <span class="badge badge-ok">✅ Encerrado</span>
       </div>
       <!-- Detalhes em grade -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:6px;">
@@ -2133,11 +2121,11 @@ function renderHistoricoTurnos(){
           <div style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;font-weight:600;">${t.dataIni||'—'}</div>
           <div style="font-size:0.7rem;color:var(--muted);">${t.horaIni||''}</div>
         </div>
-        ${!aberto ? `<div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;text-align:center;">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;text-align:center;">
           <div style="font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">Encerramento</div>
           <div style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;font-weight:600;">${t.dataFim||'—'}</div>
           <div style="font-size:0.7rem;color:var(--muted);">${t.horaFim||''}</div>
-        </div>` : ''}
+        </div>
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;text-align:center;">
           <div style="font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">KM Ini → Fim</div>
           <div style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;font-weight:600;">${(t.kmIni||0).toLocaleString('pt-BR')} → ${t.kmFim?t.kmFim.toLocaleString('pt-BR'):'—'}</div>
@@ -2150,7 +2138,7 @@ function renderHistoricoTurnos(){
       </div>
     </div>`;
   }).join('');
-  if(turnos.length > 10) wrap.innerHTML += `<p style="font-size:0.72rem;color:var(--muted);text-align:center;margin-top:6px;">Exibindo últimos 10 de ${turnos.length} turnos. Ver todos no Banco de Dados.</p>`;
+  if(encerrados.length > 10) wrap.innerHTML += `<p style="font-size:0.72rem;color:var(--muted);text-align:center;margin-top:6px;">Exibindo últimos 10 de ${encerrados.length} turnos. Ver todos no Banco de Dados.</p>`;
 }
 
 // ══════════════════════════════════════════
@@ -2225,22 +2213,6 @@ function salvarRegistro(){
     obs_geral:       v('obs_geral'),
     providencias:    v('providencias'),
     turnoId:         ta ? ta.id : null,
-    // Inspeção Diurna
-    insp_hall:       r('insp_hall'),
-    insp_hall_checks: ['hall_c1','hall_c2','hall_c3','hall_c4','hall_c5','hall_c6'].filter(id=>{const el=document.getElementById(id);return el&&el.checked;}).map(id=>(document.querySelector('label[for="'+id+'"]')||{}).textContent||id),
-    obs_hall:        v('obs_hall'),
-    insp_lazer:      r('insp_lazer'),
-    insp_lazer_checks: ['lazer_c1','lazer_c2','lazer_c3','lazer_c4','lazer_c5','lazer_c6','lazer_c7','lazer_c8'].filter(id=>{const el=document.getElementById(id);return el&&el.checked;}).map(id=>(document.querySelector('label[for="'+id+'"]')||{}).textContent||id),
-    obs_lazer:       v('obs_lazer'),
-    insp_garagem:    r('insp_garagem'),
-    insp_garagem_checks: ['gar_c1','gar_c2','gar_c3','gar_c4','gar_c5','gar_c6'].filter(id=>{const el=document.getElementById(id);return el&&el.checked;}).map(id=>(document.querySelector('label[for="'+id+'"]')||{}).textContent||id),
-    obs_garagem:     v('obs_garagem'),
-    insp_corredor:   r('insp_corredor'),
-    insp_corredor_checks: ['cor_c1','cor_c2','cor_c3','cor_c4'].filter(id=>{const el=document.getElementById(id);return el&&el.checked;}).map(id=>(document.querySelector('label[for="'+id+'"]')||{}).textContent||id),
-    obs_corredor:    v('obs_corredor'),
-    insp_outro:      r('insp_outro'),
-    insp_outro_nome: v('outro_nome'),
-    obs_outro:       v('obs_outro'),
   };
 
   // ── Salva no localStorage (fonte única da verdade) ──
@@ -2287,7 +2259,8 @@ function salvarRegistro(){
   }
 }
 
-function limparFormSilencioso(){
+function limparForm(){
+  if(!confirm('Limpar todos os campos?')) return;
   document.querySelectorAll('#tab-vistoria input[type=text],#tab-vistoria input[type=date],#tab-vistoria input[type=time],#tab-vistoria input[type=number],#tab-vistoria textarea').forEach(el=>el.value='');
   document.querySelectorAll('#tab-vistoria select').forEach(el=>el.selectedIndex=0);
   document.querySelectorAll('#tab-vistoria input[type=checkbox]').forEach(el=>el.checked=false);
@@ -2295,11 +2268,6 @@ function limparFormSilencioso(){
   const now = new Date();
   document.getElementById('data_visita').value = now.toISOString().slice(0,10);
   document.getElementById('hora_visita').value = now.toTimeString().slice(0,5);
-}
-
-function limparForm(){
-  if(!confirm('Limpar todos os campos?')) return;
-  limparFormSilencioso();
 }
 
 // ══════════════════════════════════════════
@@ -2802,79 +2770,38 @@ function verDetalhes(id){
   registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
   const r = registros.find(x=>x.id===id);
   if(!r) return;
-
   const dataFmt = r.data ? new Date(r.data+'T12:00').toLocaleDateString('pt-BR') : '—';
-
-  // Monta inspeção diurna sem template literal aninhado
-  function badgeInsp(status){
-    const cor = status==='OK' ? 'var(--ok)' : status==='Atenção' ? 'var(--accent)' : status==='Irregular' ? 'var(--danger)' : 'var(--muted)';
-    return '<span style="font-size:0.68rem;font-weight:700;color:'+cor+';background:rgba(0,0,0,.2);border:1px solid '+cor+';border-radius:10px;padding:1px 8px;">'+status+'</span>';
-  }
-
-  const locais = [
-    {nome:'🚪 Hall de Entrada', key:'hall'},
-    {nome:'🏊 Área de Lazer',   key:'lazer'},
-    {nome:'🅿️ Garagem',         key:'garagem'},
-    {nome:'🚶 Corredores',      key:'corredor'},
-    {nome:'📍 '+(r.insp_outro_nome||'Outro Local'), key:'outro'},
-  ];
-
-  let inspHtml = '';
-  locais.forEach(function(loc){
-    const status = r['insp_'+loc.key];
-    if(!status) return;
-    const checks = (r['insp_'+loc.key+'_checks'] || []);
-    const obs    = r['obs_'+loc.key] || '';
-    inspHtml += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;margin-bottom:7px;">';
-    inspHtml += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">';
-    inspHtml += '<span style="font-family:\'Rajdhani\',sans-serif;font-size:0.8rem;font-weight:700;color:var(--accent2);">'+loc.nome+'</span>';
-    inspHtml += badgeInsp(status);
-    inspHtml += '</div>';
-    if(checks.length) inspHtml += '<div style="font-size:0.72rem;color:var(--ok);margin-bottom:4px;">✔ '+checks.join(' · ')+'</div>';
-    if(obs)           inspHtml += '<div style="font-size:0.75rem;color:var(--muted);">'+obs+'</div>';
-    inspHtml += '</div>';
-  });
-
-  let html = '';
-  html += '<div class="detalhe-section">Identificação</div>';
-  html += '<div class="detalhe-grid">';
-  html += '<div class="detalhe-item"><div class="d-lbl">Data</div><div class="d-val">'+dataFmt+' '+(r.hora||'')+'</div></div>';
-  html += '<div class="detalhe-item"><div class="d-lbl">Posto</div><div class="d-val">'+(r.posto||'—')+'</div></div>';
-  html += '<div class="detalhe-item"><div class="d-lbl">Supervisor</div><div class="d-val">'+(r.supervisor||'—')+'</div></div>';
-  html += '<div class="detalhe-item"><div class="d-lbl">Colaborador</div><div class="d-val">'+(r.colaborador||'—')+(r.funcao?' ('+r.funcao+')':'')+'</div></div>';
-  html += '<div class="detalhe-item"><div class="d-lbl">Turno</div><div class="d-val">'+(r.turno||'—')+'</div></div>';
-  html += '<div class="detalhe-item"><div class="d-lbl">Situação</div><div class="d-val">'+badgeSit(r.situacao)+'</div></div>';
-  html += '</div>';
-
-  html += '<div class="detalhe-section">Equipamentos e Ronda</div>';
-  html += '<div class="detalhe-grid">';
-  html += '<div class="detalhe-item"><div class="d-lbl">PC</div><div class="d-val">'+(r.pc||'—')+'</div></div>';
-  html += '<div class="detalhe-item"><div class="d-lbl">Câmeras</div><div class="d-val">'+(r.cameras||'—')+'</div></div>';
-  html += '<div class="detalhe-item"><div class="d-lbl">Cancela</div><div class="d-val">'+(r.cancela||'—')+'</div></div>';
-  html += '<div class="detalhe-item"><div class="d-lbl">Geladeira</div><div class="d-val">'+(r.geladeira||'—')+'</div></div>';
-  html += '<div class="detalhe-item"><div class="d-lbl">Micro-ondas</div><div class="d-val">'+(r.microondas||'—')+'</div></div>';
-  html += '<div class="detalhe-item"><div class="d-lbl">Ronda</div><div class="d-val">'+(r.ronda||'—')+'</div></div>';
-  html += '</div>';
-
-  if(inspHtml){
-    html += '<div class="detalhe-section">☀️ Inspeção Diurna — Áreas Comuns</div>';
-    html += inspHtml;
-  }
-
-  if(r.obs_uniforme){
-    html += '<div class="detalhe-section">Observações — Uniforme</div>';
-    html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">'+r.obs_uniforme+'</div>';
-  }
-  if(r.obs_geral){
-    html += '<div class="detalhe-section">Observações Gerais</div>';
-    html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">'+r.obs_geral+'</div>';
-  }
-  if(r.providencias){
-    html += '<div class="detalhe-section">Providências</div>';
-    html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">'+r.providencias+'</div>';
-  }
-
-  document.getElementById('detalhe-content').innerHTML = html;
+  document.getElementById('detalhe-content').innerHTML = `
+    <div class="detalhe-section">Identificação</div>
+    <div class="detalhe-grid">
+      <div class="detalhe-item"><div class="d-lbl">Data</div><div class="d-val">${dataFmt} ${r.hora||''}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Posto</div><div class="d-val">${r.posto||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Supervisor</div><div class="d-val">${r.supervisor||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Colaborador</div><div class="d-val">${r.colaborador||'—'} ${r.funcao?'('+r.funcao+')':''}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Turno</div><div class="d-val">${r.turno||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Situação</div><div class="d-val">${badgeSit(r.situacao)}</div></div>
+    </div>
+    <div class="detalhe-section">VTR do Supervisor</div>
+    <div class="detalhe-grid">
+      <div class="detalhe-item"><div class="d-lbl">Placa</div><div class="d-val">${r.vtrPlaca||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Tipo</div><div class="d-val">${r.vtrTipo||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">KM Inicial</div><div class="d-val">${r.vtrKmIni||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">KM Final</div><div class="d-val">${r.vtrKmFim||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Percorrido</div><div class="d-val" style="color:var(--ok);font-weight:700">${r.vtrKmPercorrido ? r.vtrKmPercorrido+' km' : '—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Estado</div><div class="d-val">${r.vtrEstado||'—'}</div></div>
+    </div>
+    <div class="detalhe-section">Equipamentos</div>
+    <div class="detalhe-grid">
+      <div class="detalhe-item"><div class="d-lbl">PC</div><div class="d-val">${r.pc||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Câmeras</div><div class="d-val">${r.cameras||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Cancela</div><div class="d-val">${r.cancela||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Geladeira</div><div class="d-val">${r.geladeira||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Micro-ondas</div><div class="d-val">${r.microondas||'—'}</div></div>
+      <div class="detalhe-item"><div class="d-lbl">Ronda</div><div class="d-val">${r.ronda||'—'}</div></div>
+    </div>
+    ${r.obs_geral?`<div class="detalhe-section">Observações</div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">${r.obs_geral}</div>`:''}
+    ${r.providencias?`<div class="detalhe-section">Providências</div><div style="background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 11px;font-size:0.8rem;">${r.providencias}</div>`:''}
+  `;
   document.getElementById('modal-detalhe').classList.add('open');
 }
 
@@ -2884,77 +2811,6 @@ function fecharModalDetalhe(){
 document.getElementById('modal-detalhe').addEventListener('click',function(e){
   if(e.target===this) fecharModalDetalhe();
 });
-
-// ══════════════════════════════════════════
-// MODAL DE VISTORIA (FAB)
-// ══════════════════════════════════════════
-function abrirModalVistoria(){
-  // Copia o conteúdo do tab-vistoria para o modal (sem o btn-row do final)
-  const fonte = document.getElementById('tab-vistoria');
-  const destino = document.getElementById('modal-vistoria-body');
-  // Limpa destino e clona todo o conteúdo, exceto o btn-row original
-  destino.innerHTML = '';
-  Array.from(fonte.children).forEach(child => {
-    if(child.classList.contains('btn-row')) return; // pula botões antigos
-    destino.appendChild(child.cloneNode(true));
-  });
-  // Atualiza data/hora para agora
-  const now = new Date();
-  const dv = destino.querySelector('#data_visita');
-  const hv = destino.querySelector('#hora_visita');
-  // Os IDs duplicam — usar name único no modal não é necessário pois salvarRegistro
-  // lê do documento principal. Então apenas sincronizamos o tab-vistoria oculto.
-  document.getElementById('data_visita').value = now.toISOString().slice(0,10);
-  document.getElementById('hora_visita').value = now.toTimeString().slice(0,5);
-  // Sincroniza selects do modal com os valores atuais do form oculto
-  sincronizarModalVistoria(destino);
-  document.getElementById('modal-vistoria').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function sincronizarModalVistoria(container){
-  // Sincroniza mudanças nos inputs do modal → form oculto (tab-vistoria)
-  container.querySelectorAll('input,select,textarea').forEach(el => {
-    const id = el.id;
-    if(!id) return;
-    const orig = document.getElementById(id);
-    if(!orig || el === orig) return;
-    // Copia valor inicial
-    if(el.type === 'checkbox' || el.type === 'radio'){
-      el.checked = orig.checked;
-    } else {
-      el.value = orig.value;
-    }
-    // Espelha mudanças → form oculto
-    el.addEventListener('change', () => {
-      if(el.type === 'checkbox' || el.type === 'radio') orig.checked = el.checked;
-      else orig.value = el.value;
-    });
-    el.addEventListener('input', () => {
-      if(el.type !== 'checkbox' && el.type !== 'radio') orig.value = el.value;
-    });
-  });
-}
-
-function fecharModalVistoria(){
-  document.getElementById('modal-vistoria').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// Fecha ao clicar fora do box
-document.getElementById('modal-vistoria').addEventListener('click', function(e){
-  if(e.target === this) fecharModalVistoria();
-});
-
-// Após salvar, fecha o modal automaticamente
-const _salvarOriginal = salvarRegistro;
-salvarRegistro = function(){
-  _salvarOriginal();
-  const modal = document.getElementById('modal-vistoria');
-  if(modal.classList.contains('open')){
-    setTimeout(() => fecharModalVistoria(), 1200);
-  }
-};
 
 // ══════════════════════════════════════════
 // TOAST
