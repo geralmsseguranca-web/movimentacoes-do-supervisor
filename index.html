@@ -1546,6 +1546,38 @@
 
 <!-- ══════════ TAB RELATÓRIO ══════════ -->
 <div id="tab-relatorio" class="tab-panel">
+
+  <!-- ── DASHBOARD RANKING POSTOS ── -->
+  <div class="card" id="card-ranking-postos">
+    <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <span>📍 Ranking de Postos Visitados</span>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <select id="rank-filtro-periodo" onchange="renderRankingPostos()" style="font-size:0.72rem;padding:4px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;">
+          <option value="todos">Todos os períodos</option>
+          <option value="7">Últimos 7 dias</option>
+          <option value="30">Últimos 30 dias</option>
+          <option value="90">Últimos 90 dias</option>
+        </select>
+        <select id="rank-filtro-supervisor" onchange="renderRankingPostos()" style="font-size:0.72rem;padding:4px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;">
+          <option value="">Todos supervisores</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Métricas rápidas -->
+    <div id="rank-stats-row" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;"></div>
+
+    <!-- Barra de visitas por posto -->
+    <div id="rank-chart-wrap" style="margin-bottom:20px;"></div>
+
+    <!-- Tabela top mais / menos -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;" id="rank-tops-wrap"></div>
+
+    <!-- Histórico de últimas visitas por posto -->
+    <div id="rank-historico-wrap"></div>
+  </div>
+
+  <!-- ── TABELA ORIGINAL DE VISTORIAS ── -->
   <div class="card">
     <div class="card-title">Relatório de Vistorias</div>
     <div id="relatorio-wrap">
@@ -1755,7 +1787,7 @@ function showTab(id, btn){
   document.getElementById('tab-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
   else document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.textContent.includes(id)) b.classList.add('active'); });
-  if(id==='relatorio') renderRelatorio();
+  if(id==='relatorio'){ renderRelatorio(); renderRankingPostos(); }
   if(id==='banco') { renderBanco(); renderTurnosBanco(); atualizarStats(); renderCadLista('supervisores'); renderCadLista('colaboradores'); renderCadLista('postos'); renderVeiculosLista(); }
 }
 
@@ -2286,6 +2318,7 @@ function renderRelatorio(){
   registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
   if(!registros.length){
     wrap.innerHTML=`<div class="empty-state"><div class="big">📋</div><p>Nenhum registro salvo ainda.</p></div>`;
+    renderRankingPostos();
     return;
   }
   let html = `<div style="overflow-x:auto;"><table class="relatorio-table">
@@ -2310,7 +2343,208 @@ function renderRelatorio(){
   html += `</tbody></table></div>`;
   html += `<p style="margin-top:8px;font-size:.72rem;color:var(--muted);">Total: <strong style="color:var(--accent2)">${registros.length}</strong> registros</p>`;
   wrap.innerHTML = html;
+  renderRankingPostos();
 }
+
+// ══════════════════════════════════════════
+// RANKING DE POSTOS
+// ══════════════════════════════════════════
+function renderRankingPostos(){
+  const regs = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+
+  // Preenche select de supervisores
+  const selSup = document.getElementById('rank-filtro-supervisor');
+  if(selSup){
+    const supAtual = selSup.value;
+    const supUnicos = [...new Set(regs.map(r=>r.supervisor).filter(Boolean))].sort();
+    const optsHtml = `<option value="">Todos supervisores</option>` +
+      supUnicos.map(s=>`<option value="${s}" ${s===supAtual?'selected':''}>${s}</option>`).join('');
+    selSup.innerHTML = optsHtml;
+  }
+
+  // Filtros
+  const periodo = parseInt(document.getElementById('rank-filtro-periodo')?.value||'0')||0;
+  const supFiltro = document.getElementById('rank-filtro-supervisor')?.value||'';
+  const hoje = new Date(); hoje.setHours(23,59,59,999);
+  const limiteData = periodo ? new Date(hoje - periodo*86400000) : null;
+
+  const dados = regs.filter(r=>{
+    if(!r.posto) return false;
+    if(supFiltro && r.supervisor !== supFiltro) return false;
+    if(limiteData && r.data){
+      const d = new Date(r.data+'T12:00');
+      if(d < limiteData) return false;
+    }
+    return true;
+  });
+
+  // Contagem por posto
+  const contagem = {};
+  const ultimaVisita = {};
+  const situacaoPosto = {};
+  dados.forEach(r=>{
+    const p = r.posto;
+    contagem[p] = (contagem[p]||0)+1;
+    if(!ultimaVisita[p] || r.data > ultimaVisita[p].data){
+      ultimaVisita[p] = r;
+    }
+    if(!situacaoPosto[p]) situacaoPosto[p] = {ok:0,at:0,ng:0};
+    if(r.situacao && r.situacao.includes('✅')) situacaoPosto[p].ok++;
+    else if(r.situacao && r.situacao.includes('⚠️')) situacaoPosto[p].at++;
+    else if(r.situacao && r.situacao.includes('🔴')) situacaoPosto[p].ng++;
+  });
+
+  const postos = Object.keys(contagem).sort((a,b)=>contagem[b]-contagem[a]);
+  const maxVisitas = postos.length ? contagem[postos[0]] : 1;
+
+  // ── Stats rápidas ──
+  const statsWrap = document.getElementById('rank-stats-row');
+  if(statsWrap){
+    const totalVisitas = dados.length;
+    const totalPostos = postos.length;
+    const mediaVisitas = totalPostos ? (totalVisitas/totalPostos).toFixed(1) : 0;
+    const postoMais = postos[0]||'—';
+    statsWrap.innerHTML = `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px;text-align:center;">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:700;color:var(--accent2);">${totalVisitas}</div>
+        <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Visitas no período</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px;text-align:center;">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:700;color:var(--info);">${totalPostos}</div>
+        <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Postos visitados</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px;text-align:center;">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:1.5rem;font-weight:700;color:var(--ok);">${mediaVisitas}</div>
+        <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Média por posto</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px;text-align:center;overflow:hidden;">
+        <div style="font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${postoMais}">${postoMais}</div>
+        <div style="font-size:0.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Posto mais visitado</div>
+      </div>`;
+  }
+
+  // ── Gráfico de barras ──
+  const chartWrap = document.getElementById('rank-chart-wrap');
+  if(chartWrap){
+    if(!postos.length){
+      chartWrap.innerHTML = `<div class="empty-state" style="padding:20px;"><div class="big">📊</div><p>Sem dados para o período selecionado.</p></div>`;
+    } else {
+      // Paleta de cores por posição
+      const cores = ['#f8cc68','#5aabff','#44c795','#f06060','#c084fc','#fb923c','#34d399','#f472b6','#60a5fa','#a3e635'];
+      let barHtml = `<div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-family:'Rajdhani',sans-serif;">Visitas por posto</div>`;
+      postos.forEach((p,i)=>{
+        const pct = Math.round((contagem[p]/maxVisitas)*100);
+        const cor = cores[i % cores.length];
+        const sit = situacaoPosto[p]||{ok:0,at:0,ng:0};
+        const ultima = ultimaVisita[p];
+        const dataUlt = ultima && ultima.data ? new Date(ultima.data+'T12:00').toLocaleDateString('pt-BR') : '—';
+        barHtml += `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+            <div style="width:22px;text-align:right;font-family:'Rajdhani',sans-serif;font-size:0.7rem;color:var(--muted);flex-shrink:0;">${i+1}º</div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                <span style="font-size:0.72rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;" title="${p}">${p}</span>
+                <span style="font-size:0.68rem;color:var(--muted);flex-shrink:0;margin-left:6px;">
+                  ${sit.ok?`<span style="color:var(--ok)">✅${sit.ok}</span> `:''}${sit.at?`<span style="color:var(--accent)">⚠️${sit.at}</span> `:''}${sit.ng?`<span style="color:var(--danger)">🔴${sit.ng}</span> `:''}
+                  <span style="color:var(--muted)">últ: ${dataUlt}</span>
+                </span>
+              </div>
+              <div style="background:var(--surface3);border-radius:4px;height:10px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:${cor};border-radius:4px;transition:width .5s ease;"></div>
+              </div>
+            </div>
+            <div style="width:28px;text-align:right;font-family:'Rajdhani',sans-serif;font-size:0.85rem;font-weight:700;color:${cor};flex-shrink:0;">${contagem[p]}</div>
+          </div>`;
+      });
+      chartWrap.innerHTML = barHtml;
+    }
+  }
+
+  // ── Top mais / menos visitados ──
+  const topsWrap = document.getElementById('rank-tops-wrap');
+  if(topsWrap){
+    if(postos.length < 2){
+      topsWrap.style.display = 'none';
+    } else {
+      topsWrap.style.display = 'grid';
+      const top3mais = postos.slice(0,3);
+      const top3menos = postos.slice(-3).reverse();
+      const cardStyle = `background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px;`;
+      const itemMaisHtml = top3mais.map((p,i)=>{
+        const medalhas = ['🥇','🥈','🥉'];
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);last-child:border-none;">
+          <span style="font-size:0.75rem;color:var(--text);">${medalhas[i]} ${p}</span>
+          <span style="font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:var(--ok);">${contagem[p]}</span>
+        </div>`;
+      }).join('');
+      const itemMenosHtml = top3menos.map((p,i)=>{
+        const icons = ['⚠️','⬇️','⬇️'];
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:0.75rem;color:var(--text);">${icons[i]} ${p}</span>
+          <span style="font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:var(--danger);">${contagem[p]}</span>
+        </div>`;
+      }).join('');
+      topsWrap.innerHTML = `
+        <div style="${cardStyle}">
+          <div style="font-size:0.65rem;color:var(--ok);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-family:'Rajdhani',sans-serif;">🏆 Mais visitados</div>
+          ${itemMaisHtml}
+        </div>
+        <div style="${cardStyle}">
+          <div style="font-size:0.65rem;color:var(--danger);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-family:'Rajdhani',sans-serif;">📉 Menos visitados</div>
+          ${itemMenosHtml}
+        </div>`;
+    }
+  }
+
+  // ── Histórico de última visita por posto ──
+  const histWrap = document.getElementById('rank-historico-wrap');
+  if(histWrap && postos.length){
+    // Ordenar por data da última visita (mais antigos primeiro = precisam de atenção)
+    const postosOrdemAtencao = postos.slice().sort((a,b)=>{
+      const da = ultimaVisita[a]?.data||'';
+      const db2 = ultimaVisita[b]?.data||'';
+      return da < db2 ? -1 : da > db2 ? 1 : 0;
+    });
+    let tblHtml = `
+      <div style="font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;font-family:'Rajdhani',sans-serif;">📅 Última visita por posto (do mais antigo ao mais recente)</div>
+      <div style="overflow-x:auto;">
+      <table class="relatorio-table">
+        <thead><tr>
+          <th>Posto</th>
+          <th>Última Visita</th>
+          <th>Supervisor</th>
+          <th>Situação</th>
+          <th>Total Visitas</th>
+          <th>Status</th>
+        </tr></thead><tbody>`;
+    const agora = new Date();
+    postosOrdemAtencao.forEach(p=>{
+      const ultima = ultimaVisita[p];
+      const dataUlt = ultima && ultima.data ? new Date(ultima.data+'T12:00') : null;
+      const dataFmt = dataUlt ? dataUlt.toLocaleDateString('pt-BR') : '—';
+      const diffDias = dataUlt ? Math.floor((agora - dataUlt)/(1000*60*60*24)) : 999;
+      let statusBadge, statusCor;
+      if(diffDias <= 7){ statusBadge='Recente'; statusCor='var(--ok)'; }
+      else if(diffDias <= 30){ statusBadge='Normal'; statusCor='var(--accent)'; }
+      else { statusBadge='Atenção'; statusCor='var(--danger)'; }
+      tblHtml += `<tr>
+        <td style="font-weight:600;">${p}</td>
+        <td>${dataFmt}<br><span style="font-size:.68rem;color:var(--muted)">${ultima?.hora||''}</span></td>
+        <td style="font-size:.72rem;">${ultima?.supervisor||'—'}</td>
+        <td>${badgeSit(ultima?.situacao)}</td>
+        <td style="text-align:center;font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;color:var(--accent2);">${contagem[p]}</td>
+        <td><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:700;background:rgba(0,0,0,.2);border:1px solid ${statusCor};color:${statusCor};">${statusBadge}</span>
+        ${diffDias<999?`<br><span style="font-size:.62rem;color:var(--muted)">${diffDias}d atrás</span>`:''}
+        </td>
+      </tr>`;
+    });
+    tblHtml += `</tbody></table></div>`;
+    histWrap.innerHTML = tblHtml;
+  } else if(histWrap){
+    histWrap.innerHTML='';
+  }
+}
+
 
 function excluir(id){
   if(!confirm('Excluir este registro?')) return;
