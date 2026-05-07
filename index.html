@@ -10,7 +10,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
     getFirestore, initializeFirestore, persistentLocalCache,
-    persistentMultipleTabManager,
+    persistentSingleTabManager,
     collection, doc, setDoc, getDoc, getDocs,
     deleteDoc, onSnapshot, query, orderBy
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -26,18 +26,23 @@
 
   const app = initializeApp(firebaseConfig);
 
-  // initializeFirestore com cache persistente multi-aba e longPolling
-  // Isso permite funcionar mesmo quando aberto como file:// 
+  // initializeFirestore com cache persistente e longPolling
+  // persistentSingleTabManager é mais compatível com browsers mobile
   let db;
   try {
     db = initializeFirestore(app, {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() }),
       experimentalForceLongPolling: true,
       useFetchStreams: false
     });
   } catch(e) {
     // fallback caso já tenha sido inicializado
-    db = getFirestore(app);
+    console.error('Erro ao inicializar Firestore com cache persistente:', e);
+    try {
+      db = getFirestore(app);
+    } catch(e2) {
+      console.error('Erro no fallback getFirestore:', e2);
+    }
   }
 
   // ── helpers para expor ao escopo global ──
@@ -299,28 +304,50 @@
     setOnlineStatus(navigator.onLine);
 
     // Aguarda o app principal (CADS e funções de render) estar disponível.
-    // Usa polling em vez de setTimeout fixo para evitar race conditions.
+    // Usa polling com timeout de segurança para evitar loop infinito.
     await new Promise(r => {
-      const check = () => (typeof window.CADS !== 'undefined' && typeof window.renderBanco === 'function')
-        ? r() : setTimeout(check, 50);
+      let tentativas = 0;
+      const maxTentativas = 200; // 10 segundos (200 × 50ms)
+      const check = () => {
+        tentativas++;
+        if (typeof window.CADS !== 'undefined' && typeof window.renderBanco === 'function') {
+          r();
+        } else if (tentativas >= maxTentativas) {
+          console.warn('Firebase: timeout aguardando CADS/renderBanco. Iniciando listeners mesmo assim.');
+          r();
+        } else {
+          setTimeout(check, 50);
+        }
+      };
       check();
     });
+
+    // Verifica se db foi inicializado antes de ativar listeners
+    if (!window._db) {
+      console.error('Firebase: _db não disponível. Listeners não serão ativados.');
+      if(typeof window.showToast === 'function') window.showToast('⚠️ Firebase não inicializou. Dados locais apenas.');
+      return;
+    }
 
     // Ativa listeners em tempo real (onSnapshot) para todas as coleções.
     // Cada listener dispara imediatamente com os dados atuais e depois
     // atualiza automaticamente a cada mudança no Firestore.
-    window._unsubscribers = [
-      iniciarListenerRegistros(),
-      iniciarListenerTurnos(),
-      iniciarListenerTurnoAtivo(),
-      iniciarListenerCad('supervisores'),
-      iniciarListenerCad('colaboradores'),
-      iniciarListenerCad('postos'),
-      iniciarListenerVeiculos(),
-    ];
-
-    window._fbReady = true;
-    if(typeof window.showToast === 'function') window.showToast('☁️ Sincronização em tempo real ativa!');
+    try {
+      window._unsubscribers = [
+        iniciarListenerRegistros(),
+        iniciarListenerTurnos(),
+        iniciarListenerTurnoAtivo(),
+        iniciarListenerCad('supervisores'),
+        iniciarListenerCad('colaboradores'),
+        iniciarListenerCad('postos'),
+        iniciarListenerVeiculos(),
+      ];
+      window._fbReady = true;
+      if(typeof window.showToast === 'function') window.showToast('☁️ Sincronização em tempo real ativa!');
+    } catch(e) {
+      console.error('Firebase: erro ao ativar listeners:', e);
+      if(typeof window.showToast === 'function') window.showToast('⚠️ Erro ao ativar sincronização em tempo real.');
+    }
   });
 </script>
 <style>
