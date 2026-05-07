@@ -9,7 +9,9 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import {
-    getFirestore, collection, doc, setDoc, getDoc, getDocs,
+    getFirestore, initializeFirestore, persistentLocalCache,
+    persistentMultipleTabManager,
+    collection, doc, setDoc, getDoc, getDocs,
     deleteDoc, onSnapshot, query, orderBy
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -23,7 +25,20 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+
+  // initializeFirestore com cache persistente multi-aba e longPolling
+  // Isso permite funcionar mesmo quando aberto como file:// 
+  let db;
+  try {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+      experimentalForceLongPolling: true,
+      useFetchStreams: false
+    });
+  } catch(e) {
+    // fallback caso já tenha sido inicializado
+    db = getFirestore(app);
+  }
 
   // ── helpers para expor ao escopo global ──
   window._db = db;
@@ -1017,6 +1032,7 @@
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-left:auto;">
     <div id="clock"></div>
     <div id="firebase-status" style="font-size:0.6rem;color:var(--muted);letter-spacing:0.3px;">⏳ Conectando...</div>
+    <div id="firebase-diag" style="font-size:0.55rem;color:var(--muted);cursor:pointer;text-decoration:underline;letter-spacing:0.3px;" onclick="mostrarDiagnostico()">🔍 diagnóstico</div>
   </div>
 </header>
 
@@ -3137,6 +3153,81 @@ function showToast(msg){
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
 }
+// ══════════════════════════════════════════
+// DIAGNÓSTICO FIREBASE
+// ══════════════════════════════════════════
+function mostrarDiagnostico(){
+  const linhas = [];
+
+  // 1. Protocolo
+  linhas.push('📡 Protocolo: ' + window.location.protocol);
+  if(window.location.protocol === 'file:'){
+    linhas.push('❌ PROBLEMA: arquivo aberto como file:// — Firebase não funciona assim!');
+    linhas.push('   Solução: hospede o arquivo num servidor HTTP (ex: GitHub Pages, Firebase Hosting, ou extensão Live Server no VSCode)');
+  } else {
+    linhas.push('✅ Protocolo OK (http/https)');
+  }
+
+  // 2. Online
+  linhas.push('🌐 Navegador online: ' + (navigator.onLine ? '✅ Sim' : '❌ Não'));
+
+  // 3. Firebase pronto
+  linhas.push('☁️ Firebase inicializado: ' + (window._fbReady ? '✅ Sim' : '⏳ Ainda não (ou falhou)'));
+
+  // 4. Listeners ativos
+  const nsubs = window._unsubscribers ? window._unsubscribers.length : 0;
+  linhas.push('👂 Listeners ativos: ' + nsubs + (nsubs >= 7 ? ' ✅' : ' ❌ (esperado 7)'));
+
+  // 5. Registros no localStorage
+  try {
+    const regs = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+    linhas.push('💾 Registros no cache local: ' + regs.length);
+  } catch(e) { linhas.push('💾 Cache local: erro - ' + e.message); }
+
+  // 6. Tentar leitura direta no Firestore
+  linhas.push('');
+  linhas.push('⏳ Testando leitura no Firestore...');
+
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#0f1520;border:1px solid #2a3650;border-radius:10px;padding:20px;max-width:500px;width:100%;font-family:monospace;font-size:0.72rem;color:#eaf0fa;line-height:1.7;max-height:80vh;overflow-y:auto;';
+  box.innerHTML = '<div style="font-family:Rajdhani,sans-serif;font-size:1rem;font-weight:700;color:#f8cc68;margin-bottom:12px;">🔍 Diagnóstico Firebase</div>' +
+    linhas.map(l => {
+      if(l.startsWith('❌')) return '<div style="color:#f06060">'+l+'</div>';
+      if(l.startsWith('✅')||l.includes('✅')) return '<div style="color:#44c795">'+l+'</div>';
+      if(l.startsWith('⏳')) return '<div style="color:#f0b340">'+l+'</div>';
+      return '<div>'+l+'</div>';
+    }).join('') +
+    '<div id="diag-test" style="color:#f0b340;margin-top:8px;"></div>' +
+    '<button onclick="this.closest('div[style*=fixed]').remove()" style="margin-top:16px;padding:6px 18px;background:#f0b340;color:#06090e;border:none;border-radius:5px;font-weight:700;cursor:pointer;">Fechar</button>';
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+
+  // Teste assíncrono de leitura
+  const testDiv = box.querySelector('#diag-test');
+  if(window._db && window.location.protocol !== 'file:'){
+    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js').then(({getDocs, collection, query, limit}) => {
+      return getDocs(query(collection(window._db,'registros'), limit(1)));
+    }).then(snap => {
+      testDiv.style.color = '#44c795';
+      testDiv.textContent = '✅ Leitura Firestore OK — ' + snap.size + ' doc(s) retornado(s)';
+    }).catch(err => {
+      testDiv.style.color = '#f06060';
+      testDiv.textContent = '❌ Erro Firestore: ' + err.code + ' — ' + err.message;
+      if(err.code === 'permission-denied'){
+        testDiv.textContent += '\n⚠️  Verifique as Regras do Firestore no console Firebase (deve permitir read/write)';
+      }
+    });
+  } else if(window.location.protocol === 'file:'){
+    testDiv.style.color = '#f06060';
+    testDiv.textContent = '❌ Teste pulado — protocolo file:// bloqueia Firebase';
+  } else {
+    testDiv.style.color = '#f06060';
+    testDiv.textContent = '❌ window._db não disponível — Firebase não inicializou';
+  }
+}
+
 // ── Expõe funções ao escopo global (window) para o módulo Firebase acessar ──
 window.renderAbaAtiva         = renderAbaAtiva;
 window.renderBanco            = renderBanco;
