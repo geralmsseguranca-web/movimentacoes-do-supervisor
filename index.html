@@ -2289,6 +2289,21 @@ function salvarRegistro(){
       btn.disabled = false;
     }, 2500);
   }
+
+  // ── Limpa o formulário automaticamente para a próxima vistoria ──
+  setTimeout(() => limparFormSilencioso(), 2600);
+}
+
+function limparFormSilencioso(){
+  document.querySelectorAll('#tab-vistoria input[type=text],#tab-vistoria input[type=date],#tab-vistoria input[type=time],#tab-vistoria input[type=number],#tab-vistoria textarea').forEach(el=>el.value='');
+  document.querySelectorAll('#tab-vistoria select').forEach(el=>el.selectedIndex=0);
+  document.querySelectorAll('#tab-vistoria input[type=checkbox]').forEach(el=>el.checked=false);
+  document.querySelectorAll('#tab-vistoria input[type=radio]').forEach(el=>el.checked=false);
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0,10);
+  const timeStr = now.toTimeString().slice(0,5);
+  document.getElementById('data_visita').value = dateStr;
+  document.getElementById('hora_visita').value = timeStr;
 }
 
 function limparForm(){
