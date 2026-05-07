@@ -39,6 +39,16 @@
   window.addEventListener('online',  () => setOnlineStatus(true));
   window.addEventListener('offline', () => setOnlineStatus(false));
 
+  // Flash no indicador a cada sync recebido de outro dispositivo
+  window.syncFlash = function(){
+    const bar = document.getElementById('firebase-status');
+    if(!bar) return;
+    bar.textContent = '🔄 Sincronizando...';
+    bar.style.color = 'var(--accent2)';
+    clearTimeout(window._syncFlashTimer);
+    window._syncFlashTimer = setTimeout(()=>setOnlineStatus(navigator.onLine), 1200);
+  };
+
   // ══════════════════════════════════
   // REGISTROS (Vistorias)
   // ══════════════════════════════════
@@ -60,10 +70,14 @@
       (snap) => {
         const arr = snap.docs.map(d => d.data());
         localStorage.setItem('supervisorRegistros', JSON.stringify(arr));
-        if(typeof renderBanco === 'function') renderBanco();
-        if(typeof renderRelatorio === 'function') renderRelatorio();
-        if(typeof atualizarStats === 'function') atualizarStats();
-        if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+        if(typeof window.syncFlash === 'function') window.syncFlash();
+        if(typeof renderAbaAtiva === 'function') renderAbaAtiva();
+        else {
+          if(typeof renderBanco === 'function') renderBanco();
+          if(typeof renderRelatorio === 'function') renderRelatorio();
+          if(typeof atualizarStats === 'function') atualizarStats();
+          if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+        }
       },
       (e) => console.warn('Firebase listener registros:', e)
     );
@@ -103,10 +117,13 @@
       (snap) => {
         const arr = snap.docs.map(d => d.data());
         localStorage.setItem('supervisorTurnos', JSON.stringify(arr));
-        if(typeof renderHistoricoTurnos === 'function') renderHistoricoTurnos();
-        if(typeof renderTurnosBanco === 'function') renderTurnosBanco();
-        if(typeof atualizarStats === 'function') atualizarStats();
-        if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+        if(typeof renderAbaAtiva === 'function') renderAbaAtiva();
+        else {
+          if(typeof renderHistoricoTurnos === 'function') renderHistoricoTurnos();
+          if(typeof renderTurnosBanco === 'function') renderTurnosBanco();
+          if(typeof atualizarStats === 'function') atualizarStats();
+          if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+        }
       },
       (e) => console.warn('Firebase listener turnos:', e)
     );
@@ -147,7 +164,8 @@
           localStorage.removeItem('turnoAtivo');
           window.turnoAtivo = null;
         }
-        if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
+        if(typeof renderAbaAtiva === 'function') renderAbaAtiva();
+        else if(typeof atualizarStatusTurno === 'function') atualizarStatusTurno();
       },
       (e) => console.warn('Firebase listener turnoAtivo:', e)
     );
@@ -191,6 +209,7 @@
         }
         if(typeof atualizarSelectsFormulario === 'function') atualizarSelectsFormulario();
         if(typeof renderCadLista === 'function') renderCadLista(tipo);
+        if(typeof renderAbaAtiva === 'function') renderAbaAtiva();
       },
       (e) => console.warn(`Firebase listener cad ${tipo}:`, e)
     );
@@ -237,6 +256,7 @@
         window.placas = placas;
         if(typeof atualizarSelectPlacas === 'function') atualizarSelectPlacas();
         if(typeof renderVeiculosLista === 'function') renderVeiculosLista();
+        if(typeof renderAbaAtiva === 'function') renderAbaAtiva();
       },
       (e) => console.warn('Firebase listener veiculos:', e)
     );
@@ -1781,14 +1801,26 @@ window.addEventListener('load', () => {
 // ══════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════
+window._abaAtiva = 'turno';
+
 function showTab(id, btn){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
   else document.querySelectorAll('.tab-btn').forEach(b=>{ if(b.textContent.includes(id)) b.classList.add('active'); });
+  window._abaAtiva = id;
   if(id==='relatorio'){ renderRelatorio(); renderRankingPostos(); }
   if(id==='banco') { renderBanco(); renderTurnosBanco(); atualizarStats(); renderCadLista('supervisores'); renderCadLista('colaboradores'); renderCadLista('postos'); renderVeiculosLista(); }
+}
+
+// Renderiza a aba visível no momento — chamado pelos listeners Firebase
+function renderAbaAtiva(){
+  const aba = window._abaAtiva || 'turno';
+  if(aba==='relatorio'){ try{ renderRelatorio(); }catch(e){} try{ renderRankingPostos(); }catch(e){} }
+  if(aba==='banco')    { try{ renderBanco(); }catch(e){} try{ renderTurnosBanco(); }catch(e){} try{ atualizarStats(); }catch(e){} }
+  if(aba==='turno')    { try{ atualizarStatusTurno(); }catch(e){} }
+  try{ atualizarStats(); }catch(e){}
 }
 
 // ══════════════════════════════════════════
