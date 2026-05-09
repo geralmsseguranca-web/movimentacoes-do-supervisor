@@ -1741,7 +1741,8 @@
       <table class="db-table">
         <thead>
           <tr>
-            <th>Data Abertura</th>
+            <th>Abertura</th>
+            <th>Encerramento</th>
             <th>Supervisor</th>
             <th>VTR / Placa</th>
             <th>KM Ini</th>
@@ -2264,7 +2265,7 @@ function renderHistoricoTurnos(){
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;text-align:center;">
           <div style="font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">Encerramento</div>
           <div style="font-family:'Rajdhani',sans-serif;font-size:0.82rem;font-weight:600;">${t.dataFim||'—'}</div>
-          <div style="font-size:0.7rem;color:var(--muted);">${t.horaFim||''}</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:0.88rem;font-weight:700;color:var(--danger);">${t.horaFim||'—'}</div>
         </div>
         <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:6px 8px;text-align:center;">
           <div style="font-size:0.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;">KM Ini → Fim</div>
@@ -2740,6 +2741,7 @@ function renderTurnosBanco(){
   tbody.innerHTML = turnos.map(t => `
     <tr>
       <td><strong>${t.dataIni}</strong> ${t.horaIni}</td>
+      <td>${t.dataFim ? `<strong>${t.dataFim}</strong><br><span style="font-family:'Rajdhani',sans-serif;font-size:0.9rem;font-weight:700;color:var(--danger);">🔴 ${t.horaFim||'—'}</span>` : '<span style="color:var(--muted);">—</span>'}</td>
       <td>${t.supervisor}</td>
       <td style="white-space:nowrap;font-family:'Rajdhani',sans-serif;font-weight:700;">${t.placa}<br><span style="color:var(--muted);font-weight:400;font-size:.68rem">${t.tipo||''}</span></td>
       <td>${t.kmIni.toLocaleString('pt-BR')}</td>
@@ -2851,6 +2853,7 @@ function exportarTurnosPDF(){
   const dataHoje = new Date().toLocaleDateString('pt-BR');
   let rows = tList.map(t => `<tr>
     <td>${t.dataIni||'—'} ${t.horaIni||''}</td>
+    <td>${t.dataFim ? t.dataFim+' <strong>'+t.horaFim+'</strong>' : '—'}</td>
     <td>${t.supervisor||'—'}</td>
     <td>${t.placa||'—'}<br><small>${t.tipo||''}</small></td>
     <td>${(t.kmIni||0).toLocaleString('pt-BR')}</td>
@@ -2874,7 +2877,7 @@ function exportarTurnosPDF(){
   </style></head><body>
   <h1>🚗 Relatório de Turnos / Controle de KM</h1>
   <p>Gerado em: ${dataHoje} &nbsp;|&nbsp; Total: ${tList.length} turnos</p>
-  <table><thead><tr><th>Abertura</th><th>Supervisor</th><th>VTR / Placa</th><th>KM Ini</th><th>KM Fim</th><th>Percorrido</th><th>Status</th></tr></thead>
+  <table><thead><tr><th>Abertura</th><th>Encerramento</th><th>Supervisor</th><th>VTR / Placa</th><th>KM Ini</th><th>KM Fim</th><th>Percorrido</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
   <div class="total">KM Total Percorrido: ${totalKm.toLocaleString('pt-BR')} km</div>
   <script>window.onload=()=>{window.print();}<\/script></body></html>`;
@@ -2886,8 +2889,8 @@ function exportarTurnosPDF(){
 function exportarTurnosExcel(){
   const tList = JSON.parse(localStorage.getItem('supervisorTurnos') || '[]');
   if(!tList.length){ alert('Nenhum turno para exportar.'); return; }
-  const cols = ['dataIni','horaIni','supervisor','placa','tipo','kmIni','kmFim','kmPercorrido','obsIni','obsFim','status'];
-  const header = ['Data Abertura','Hora Abertura','Supervisor','Placa','Tipo VTR','KM Inicial','KM Final','KM Percorrido','Obs. Inicial','Obs. Final','Status'];
+  const cols = ['dataIni','horaIni','dataFim','horaFim','supervisor','placa','tipo','kmIni','kmFim','kmPercorrido','obsIni','obsFim','status'];
+  const header = ['Data Abertura','Hora Abertura','Data Encerramento','Hora Encerramento','Supervisor','Placa','Tipo VTR','KM Inicial','KM Final','KM Percorrido','Obs. Inicial','Obs. Final','Status'];
   const rows = tList.map(t => cols.map(c => `"${(t[c]||'').toString().replace(/"/g,'""')}"`).join(','));
   const csv = [header.join(','), ...rows].join('\n');
   const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
