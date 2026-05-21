@@ -2072,6 +2072,7 @@
     <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
       <span>📍 Ranking de Postos Visitados</span>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm" onclick="exportarRelatorioPDF()" style="border-color:var(--danger);color:var(--danger);font-weight:700;">📄 Exportar PDF</button>
         <select id="rank-filtro-periodo" onchange="renderRankingPostos()" style="font-size:0.72rem;padding:4px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;">
           <option value="todos">Todos os períodos</option>
           <option value="7">Últimos 7 dias</option>
@@ -3288,6 +3289,163 @@ function exportarCSV(){
 }
 
 // ── EXPORTAR VISTORIAS PDF ──
+// ══════════════════════════════════════════
+// EXPORTAR RELATÓRIO COMPLETO PDF
+// ══════════════════════════════════════════
+function exportarRelatorioPDF(){
+  const regs = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+  if(!regs.length){ alert('Nenhum registro para exportar.'); return; }
+
+  // Captura filtros ativos
+  const periodo  = parseInt(document.getElementById('rank-filtro-periodo')?.value || '0') || 0;
+  const supFiltro = document.getElementById('rank-filtro-supervisor')?.value || '';
+  const hoje = new Date(); hoje.setHours(23,59,59,999);
+  const limiteData = periodo ? new Date(hoje - periodo * 86400000) : null;
+
+  const dados = regs.filter(r => {
+    if(!r.posto) return false;
+    if(supFiltro && r.supervisor !== supFiltro) return false;
+    if(limiteData && r.data){
+      const d = new Date(r.data+'T12:00');
+      if(d < limiteData) return false;
+    }
+    return true;
+  });
+
+  const dataHoje = new Date().toLocaleDateString('pt-BR');
+  const periodoTexto = periodo ? 'Últimos ' + periodo + ' dias' : 'Todos os períodos';
+  const supTexto = supFiltro || 'Todos';
+
+  // ── RANKING ──
+  const contagem = {};
+  const ultimaVisita = {};
+  const situacaoPosto = {};
+  dados.forEach(r => {
+    const p = r.posto;
+    contagem[p] = (contagem[p]||0) + 1;
+    if(!ultimaVisita[p] || r.data > ultimaVisita[p].data) ultimaVisita[p] = r;
+    if(!situacaoPosto[p]) situacaoPosto[p] = {ok:0, at:0, ng:0};
+    if(r.situacao && r.situacao.includes('✅')) situacaoPosto[p].ok++;
+    else if(r.situacao && r.situacao.includes('⚠️')) situacaoPosto[p].at++;
+    else if(r.situacao && r.situacao.includes('🔴')) situacaoPosto[p].ng++;
+  });
+  const postos = Object.keys(contagem).sort((a,b) => contagem[b] - contagem[a]);
+  const maxV = postos.length ? contagem[postos[0]] : 1;
+  const totalVisitas = dados.length;
+  const mediaVisitas = postos.length ? (totalVisitas / postos.length).toFixed(1) : 0;
+
+  const rankRows = postos.map((p, i) => {
+    const pct = Math.round((contagem[p] / maxV) * 100);
+    const s = situacaoPosto[p];
+    const ultima = ultimaVisita[p] ? new Date(ultimaVisita[p].data+'T12:00').toLocaleDateString('pt-BR') : '—';
+    const medalha = i===0?'🥇':i===1?'🥈':i===2?'🥉':''+(i+1)+'º';
+    return `<tr>
+      <td style="text-align:center;font-weight:700;">${medalha}</td>
+      <td><strong>${p}</strong></td>
+      <td style="text-align:center;font-weight:700;color:#1e6e3e;">${contagem[p]}</td>
+      <td>
+        <div style="background:#eee;border-radius:4px;height:10px;width:100%;min-width:60px;">
+          <div style="background:#e8a838;height:10px;border-radius:4px;width:${pct}%;"></div>
+        </div>
+      </td>
+      <td style="text-align:center;font-size:10px;">
+        <span style="color:green">✅${s.ok}</span>
+        <span style="color:#c09000"> ⚠️${s.at}</span>
+        <span style="color:red"> 🔴${s.ng}</span>
+      </td>
+      <td style="font-size:10px;color:#555;">${ultima}</td>
+    </tr>`;
+  }).join('');
+
+  // ── VISTORIAS ──
+  const vistRows = dados.map(r => {
+    const d = r.data ? new Date(r.data+'T12:00').toLocaleDateString('pt-BR') : '—';
+    const sit = r.situacao ? r.situacao.replace(/[✅⚠️🔴🔄]/g,'').trim() : '—';
+    const sitColor = r.situacao && r.situacao.includes('✅') ? '#1e6e3e'
+                   : r.situacao && r.situacao.includes('⚠️') ? '#8a6200'
+                   : r.situacao && r.situacao.includes('🔴') ? '#b00000' : '#333';
+    return `<tr>
+      <td>${d}<br><small style="color:#666">${r.hora||''}</small></td>
+      <td><strong>${r.posto||'—'}</strong></td>
+      <td>${r.colaborador||'—'}<br><small style="color:#666">${r.funcao||''}</small></td>
+      <td>${r.supervisor||'—'}</td>
+      <td style="color:${sitColor};font-weight:600;">${sit||'—'}</td>
+      <td style="font-size:10px;max-width:140px;">${r.obs_geral||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head>
+  <meta charset="UTF-8">
+  <title>Relatório Supervisor — ${dataHoje}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:Arial,sans-serif;font-size:11px;color:#111;padding:20px;}
+    .header{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #e8a838;padding-bottom:10px;margin-bottom:14px;}
+    .header-logo{font-size:18px;font-weight:900;color:#1e2738;letter-spacing:1px;}
+    .header-logo span{color:#e8a838;}
+    .header-sub{font-size:9px;color:#666;text-align:right;line-height:1.6;}
+    .filtros{background:#f4f6fa;border:1px solid #dde2ec;border-radius:6px;padding:8px 12px;margin-bottom:16px;font-size:10px;color:#444;display:flex;gap:20px;flex-wrap:wrap;}
+    .filtros strong{color:#1e2738;}
+    .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+    .stat-box{background:#f4f6fa;border:1px solid #dde2ec;border-radius:6px;padding:8px 10px;text-align:center;}
+    .stat-val{font-size:20px;font-weight:900;color:#1e2738;}
+    .stat-lbl{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.5px;}
+    h2{font-size:12px;font-weight:700;color:#1e2738;text-transform:uppercase;letter-spacing:.5px;border-left:3px solid #e8a838;padding-left:8px;margin:16px 0 8px;}
+    table{width:100%;border-collapse:collapse;margin-bottom:6px;}
+    th{background:#1e2738;color:#e8a838;padding:5px 7px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.4px;}
+    td{padding:5px 7px;border-bottom:1px solid #eee;vertical-align:middle;font-size:10px;}
+    tr:nth-child(even) td{background:#fafafa;}
+    .footer{margin-top:18px;font-size:9px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:8px;}
+    @media print{
+      body{padding:12px;}
+      @page{margin:12mm;}
+      h2{page-break-before:auto;}
+      table{page-break-inside:auto;}
+      tr{page-break-inside:avoid;}
+    }
+  </style></head><body>
+  <div class="header">
+    <div>
+      <div class="header-logo">M.S <span>SEGURANÇA E SERVIÇOS</span></div>
+      <div style="font-size:10px;color:#555;margin-top:2px;">Segurança Privada · Portaria · Zeladoria · Serviços Gerais · Vigia</div>
+    </div>
+    <div class="header-sub">
+      <strong>RELATÓRIO DO SUPERVISOR</strong><br>
+      Gerado em: ${dataHoje}<br>
+      Período: ${periodoTexto}<br>
+      Supervisor: ${supTexto}
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-box"><div class="stat-val">${totalVisitas}</div><div class="stat-lbl">Vistorias</div></div>
+    <div class="stat-box"><div class="stat-val">${postos.length}</div><div class="stat-lbl">Postos</div></div>
+    <div class="stat-box"><div class="stat-val">${mediaVisitas}</div><div class="stat-lbl">Média / Posto</div></div>
+    <div class="stat-box"><div class="stat-val">${postos[0]||'—'}</div><div class="stat-lbl">Mais Visitado</div></div>
+  </div>
+
+  <h2>📍 Ranking de Postos Visitados</h2>
+  <table>
+    <thead><tr><th>#</th><th>Posto</th><th>Visitas</th><th>Frequência</th><th>Situações</th><th>Última Visita</th></tr></thead>
+    <tbody>${rankRows}</tbody>
+  </table>
+
+  <h2>📋 Detalhamento de Vistorias</h2>
+  <table>
+    <thead><tr><th>Data/Hora</th><th>Posto</th><th>Colaborador</th><th>Supervisor</th><th>Situação</th><th>Observações</th></tr></thead>
+    <tbody>${vistRows}</tbody>
+  </table>
+
+  <div class="footer">Movimentações do Supervisor · ${dataHoje} · ${totalVisitas} registros exportados</div>
+  <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`;
+
+  const w = window.open('','_blank');
+  if(!w){ alert('Permita popups para gerar o PDF.'); return; }
+  w.document.write(html);
+  w.document.close();
+}
+
 function exportarVistoriasPDF(){
   registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
   if(!registros.length){ alert('Nenhum registro para exportar.'); return; }
