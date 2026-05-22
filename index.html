@@ -1410,6 +1410,30 @@
     header h1 { font-size: 0.9rem; }
   }
 
+
+  /* ── UNIFORME ITEM ── */
+  .unif-item {
+    background: rgba(19,27,39,.7);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    transition: border-color .2s;
+  }
+  .unif-item:hover { border-color: var(--border2); }
+  .unif-item-label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text2);
+    flex: 1;
+    min-width: 140px;
+  }
+  .unif-item .rating-row { flex-wrap: nowrap; gap: 4px; }
+
 </style>
 </head>
 <body>
@@ -1611,20 +1635,104 @@
 
   <!-- UNIFORME -->
   <div class="card">
-    <div class="card-title">Uniforme do Colaborador</div>
-    <div class="check-grid">
-      <div class="check-item"><input type="checkbox" id="u1"><label for="u1">Camisa/Camiseta padrão</label></div>
-      <div class="check-item"><input type="checkbox" id="u2"><label for="u2">Calça padrão</label></div>
-      <div class="check-item"><input type="checkbox" id="u3"><label for="u3">Colete/jaqueta</label></div>
-      <div class="check-item"><input type="checkbox" id="u4"><label for="u4">Sapato/bota adequado</label></div>
-      <div class="check-item"><input type="checkbox" id="u5"><label for="u5">Crachá visível</label></div>
-      <div class="check-item"><input type="checkbox" id="u6"><label for="u6">Uniforme limpo e passado</label></div>
-      <div class="check-item"><input type="checkbox" id="u7"><label for="u7">Boné/quepe (se aplicável)</label></div>
-      <div class="check-item"><input type="checkbox" id="u8"><label for="u8">EPI em uso (se aplicável)</label></div>
+    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:6px;">
+      <span>👕 Uniforme do Colaborador</span>
+      <span id="unif-badge" style="font-size:0.62rem;font-weight:700;letter-spacing:.5px;padding:3px 10px;border-radius:12px;display:none;"></span>
     </div>
-    <div class="field" style="margin-top:8px;">
+
+    <!-- Grade de itens com avaliação OK / Irregular / N/A -->
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px;">
+
+      <!-- Item: Camisa/camiseta -->
+      <div class="unif-item">
+        <div class="unif-item-label">👕 Camisa / Camiseta padrão</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="unif_camisa" id="uc1_ok" value="OK">
+          <label for="uc1_ok">OK</label>
+          <input class="rating-opt rating-ng" type="radio" name="unif_camisa" id="uc1_ng" value="Irregular">
+          <label for="uc1_ng">Irregular</label>
+          <input class="rating-opt rating-na" type="radio" name="unif_camisa" id="uc1_na" value="N/A">
+          <label for="uc1_na">N/A</label>
+        </div>
+      </div>
+
+      <!-- Item: Calça -->
+      <div class="unif-item">
+        <div class="unif-item-label">👖 Calça padrão</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="unif_calca" id="uc2_ok" value="OK">
+          <label for="uc2_ok">OK</label>
+          <input class="rating-opt rating-ng" type="radio" name="unif_calca" id="uc2_ng" value="Irregular">
+          <label for="uc2_ng">Irregular</label>
+          <input class="rating-opt rating-na" type="radio" name="unif_calca" id="uc2_na" value="N/A">
+          <label for="uc2_na">N/A</label>
+        </div>
+      </div>
+
+      <!-- Item: Colete/Jaqueta -->
+      <div class="unif-item">
+        <div class="unif-item-label">🦺 Colete / Jaqueta</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="unif_colete" id="uc3_ok" value="OK">
+          <label for="uc3_ok">OK</label>
+          <input class="rating-opt rating-ng" type="radio" name="unif_colete" id="uc3_ng" value="Irregular">
+          <label for="uc3_ng">Irregular</label>
+          <input class="rating-opt rating-na" type="radio" name="unif_colete" id="uc3_na" value="N/A">
+          <label for="uc3_na">N/A</label>
+        </div>
+      </div>
+
+      <!-- Item: Calçado -->
+      <div class="unif-item">
+        <div class="unif-item-label">👟 Calçado adequado</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="unif_calcado" id="uc4_ok" value="OK">
+          <label for="uc4_ok">OK</label>
+          <input class="rating-opt rating-ng" type="radio" name="unif_calcado" id="uc4_ng" value="Irregular">
+          <label for="uc4_ng">Irregular</label>
+          <input class="rating-opt rating-na" type="radio" name="unif_calcado" id="uc4_na" value="N/A">
+          <label for="uc4_na">N/A</label>
+        </div>
+      </div>
+
+      <!-- Item: Crachá -->
+      <div class="unif-item">
+        <div class="unif-item-label">🪪 Crachá de identificação visível</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="unif_cracha" id="uc5_ok" value="OK">
+          <label for="uc5_ok">OK</label>
+          <input class="rating-opt rating-ng" type="radio" name="unif_cracha" id="uc5_ng" value="Irregular">
+          <label for="uc5_ng">Irregular</label>
+          <input class="rating-opt rating-na" type="radio" name="unif_cracha" id="uc5_na" value="N/A">
+          <label for="uc5_na">N/A</label>
+        </div>
+      </div>
+
+      <!-- Item: Conservação -->
+      <div class="unif-item">
+        <div class="unif-item-label">✨ Uniforme limpo e conservado</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="unif_conserv" id="uc6_ok" value="OK">
+          <label for="uc6_ok">OK</label>
+          <input class="rating-opt rating-ng" type="radio" name="unif_conserv" id="uc6_ng" value="Irregular">
+          <label for="uc6_ng">Irregular</label>
+          <input class="rating-opt rating-na" type="radio" name="unif_conserv" id="uc6_na" value="N/A">
+          <label for="uc6_na">N/A</label>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Situação geral do uniforme (auto-calculada) -->
+    <div id="unif-summary" style="display:none;background:rgba(30,45,66,.6);border:1px solid var(--border2);border-radius:7px;padding:8px 12px;margin-bottom:10px;font-size:0.75rem;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+      <span style="color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-size:0.65rem;font-weight:700;">Resumo</span>
+      <span id="unif-ok-count" style="color:var(--ok);font-weight:700;"></span>
+      <span id="unif-ng-count" style="color:var(--danger);font-weight:700;"></span>
+    </div>
+
+    <div class="field">
       <label>Observação — Uniforme</label>
-      <textarea id="obs_uniforme" placeholder="Descreva irregularidades..."></textarea>
+      <textarea id="obs_uniforme" placeholder="Descreva irregularidades de apresentação, itens ausentes ou danificados..."></textarea>
     </div>
   </div>
 
@@ -2824,6 +2932,12 @@ function salvarRegistro(){
     viaturaPlaca:    v('viatura_placa'),
     obs_viatura:     v('obs_viatura_posto'),
     obs_uniforme:    v('obs_uniforme'),
+    unif_camisa:     (function(){ var s=document.querySelector('input[name="unif_camisa"]:checked'); return s?s.value:''; })(),
+    unif_calca:      (function(){ var s=document.querySelector('input[name="unif_calca"]:checked'); return s?s.value:''; })(),
+    unif_colete:     (function(){ var s=document.querySelector('input[name="unif_colete"]:checked'); return s?s.value:''; })(),
+    unif_calcado:    (function(){ var s=document.querySelector('input[name="unif_calcado"]:checked'); return s?s.value:''; })(),
+    unif_cracha:     (function(){ var s=document.querySelector('input[name="unif_cracha"]:checked'); return s?s.value:''; })(),
+    unif_conserv:    (function(){ var s=document.querySelector('input[name="unif_conserv"]:checked'); return s?s.value:''; })(),
     obs_geral:       v('obs_geral'),
     providencias:    v('providencias'),
     turnoId:         ta ? ta.id : null,
@@ -2881,6 +2995,7 @@ function limparFormSilencioso(){
   document.querySelectorAll('#tab-vistoria select').forEach(el=>el.selectedIndex=0);
   document.querySelectorAll('#tab-vistoria input[type=checkbox]').forEach(el=>el.checked=false);
   document.querySelectorAll('#tab-vistoria input[type=radio]').forEach(el=>el.checked=false);
+  if(typeof atualizarBadgeUniforme === 'function') atualizarBadgeUniforme();
   const now = new Date();
   const dateStr = now.toISOString().slice(0,10);
   const timeStr = now.toTimeString().slice(0,5);
@@ -2894,6 +3009,7 @@ function limparForm(){
   document.querySelectorAll('#tab-vistoria select').forEach(el=>el.selectedIndex=0);
   document.querySelectorAll('#tab-vistoria input[type=checkbox]').forEach(el=>el.checked=false);
   document.querySelectorAll('#tab-vistoria input[type=radio]').forEach(el=>el.checked=false);
+  if(typeof atualizarBadgeUniforme === 'function') atualizarBadgeUniforme();
   const now = new Date();
   document.getElementById('data_visita').value = now.toISOString().slice(0,10);
   document.getElementById('hora_visita').value = now.toTimeString().slice(0,5);
@@ -4436,6 +4552,71 @@ function atualizarSelectsTipoVtr(){
 
 window.renderTiposVtrLista    = renderTiposVtrLista;
 window.atualizarSelectsTipoVtr = atualizarSelectsTipoVtr;
+
+
+// ══════════════════════════════════════════
+// UNIFORME — badge e resumo automático
+// ══════════════════════════════════════════
+function atualizarBadgeUniforme(){
+  var grupos = ['unif_camisa','unif_calca','unif_colete','unif_calcado','unif_cracha','unif_conserv'];
+  var ok = 0, ng = 0;
+  grupos.forEach(function(n){
+    var sel = document.querySelector('input[name="'+n+'"]:checked');
+    if(!sel) return;
+    if(sel.value === 'OK') ok++;
+    else if(sel.value === 'Irregular') ng++;
+  });
+
+  var badge = document.getElementById('unif-badge');
+  var summary = document.getElementById('unif-summary');
+  var okEl = document.getElementById('unif-ok-count');
+  var ngEl = document.getElementById('unif-ng-count');
+
+  if(ok === 0 && ng === 0){ if(badge) badge.style.display='none'; if(summary) summary.style.display='none'; return; }
+
+  if(summary) summary.style.display='flex';
+  if(okEl) okEl.textContent = '✅ ' + ok + ' OK';
+  if(ngEl) ngEl.textContent = ng > 0 ? '🔴 ' + ng + ' Irregular' + (ng>1?'s':'') : '';
+
+  if(badge){
+    badge.style.display = 'inline-block';
+    if(ng === 0){
+      badge.textContent = '✅ Conforme';
+      badge.style.background = 'rgba(61,207,142,.15)';
+      badge.style.border = '1px solid rgba(61,207,142,.35)';
+      badge.style.color = 'var(--ok)';
+    } else {
+      badge.textContent = '⚠️ ' + ng + ' irregular' + (ng>1?'s':'');
+      badge.style.background = 'rgba(245,183,49,.12)';
+      badge.style.border = '1px solid rgba(245,183,49,.3)';
+      badge.style.color = 'var(--accent2)';
+    }
+  }
+}
+
+// Lê o resultado consolidado do uniforme para salvar no registro
+function getUniformeResumo(){
+  var grupos = ['unif_camisa','unif_calca','unif_colete','unif_calcado','unif_cracha','unif_conserv'];
+  var labels = {
+    unif_camisa:'Camisa', unif_calca:'Calça', unif_colete:'Colete',
+    unif_calcado:'Calçado', unif_cracha:'Crachá', unif_conserv:'Conservação'
+  };
+  var partes = [];
+  grupos.forEach(function(n){
+    var sel = document.querySelector('input[name="'+n+'"]:checked');
+    if(sel && sel.value === 'Irregular') partes.push(labels[n]+': Irregular');
+  });
+  return partes.length ? partes.join(' | ') : '';
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  var grupos = ['unif_camisa','unif_calca','unif_colete','unif_calcado','unif_cracha','unif_conserv'];
+  grupos.forEach(function(n){
+    document.querySelectorAll('input[name="'+n+'"]').forEach(function(el){
+      el.addEventListener('change', atualizarBadgeUniforme);
+    });
+  });
+});
 
 window.renderAbaAtiva         = renderAbaAtiva;
 window.renderBanco            = renderBanco;
