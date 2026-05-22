@@ -3447,40 +3447,72 @@ function exportarRelatorioPDF(){
 }
 
 function exportarVistoriasPDF(){
-  registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
-  if(!registros.length){ alert('Nenhum registro para exportar.'); return; }
-  const dataHoje = new Date().toLocaleDateString('pt-BR');
-  let rows = registros.map(r => {
-    const d = r.data ? new Date(r.data+'T12:00').toLocaleDateString('pt-BR') : '—';
-    const sit = r.situacao ? r.situacao.replace(/[✅⚠️🔴🔄]/g,'').trim() : '—';
-    return `<tr>
-      <td>${d}<br><small>${r.hora||''}</small></td>
-      <td>${r.posto||'—'}</td>
-      <td>${r.colaborador||'—'}<br><small>${r.funcao||''}</small></td>
-      <td>${r.supervisor||'—'}</td>
-      <td>${sit}</td>
-      <td>${r.obs_geral||'—'}</td>
-    </tr>`;
+  var todosRegistros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
+  if(!todosRegistros.length){ alert('Nenhum registro para exportar.'); return; }
+
+  // ── Aplica os mesmos filtros ativos na tela ──
+  var busca    = (document.getElementById('db-busca')?.value || '').toLowerCase().trim();
+  var filtSit  = document.getElementById('db-filtro-sit')?.value || '';
+
+  var dados = todosRegistros.filter(function(r){
+    var txt = ((r.posto||'')+(r.supervisor||'')+(r.colaborador||'')+(r.vtrPlaca||'')).toLowerCase();
+    var sitOk = !filtSit ||
+      (filtSit==='Conforme'  && r.situacao && r.situacao.includes('✅')) ||
+      (filtSit==='ressalvas' && r.situacao && r.situacao.includes('⚠️')) ||
+      (filtSit==='grave'     && r.situacao && r.situacao.includes('🔴'));
+    return txt.includes(busca) && sitOk;
+  });
+
+  if(!dados.length){ alert('Nenhum registro encontrado com os filtros ativos.'); return; }
+
+  // ── Legenda dos filtros para o cabeçalho do PDF ──
+  var dataHoje = new Date().toLocaleDateString('pt-BR');
+  var filtroTexto = '';
+  if(busca)   filtroTexto += 'Busca: "' + busca + '"';
+  if(filtSit) filtroTexto += (filtroTexto ? '  |  ' : '') + 'Situação: ' + filtSit;
+  if(!filtroTexto) filtroTexto = 'Todos os registros';
+
+  var rows = dados.map(function(r){
+    var d = r.data ? new Date(r.data+'T12:00').toLocaleDateString('pt-BR') : '—';
+    var sit = r.situacao ? r.situacao.replace(/[✅⚠️🔴🔄]/g,'').trim() : '—';
+    var sitColor = r.situacao && r.situacao.includes('✅') ? '#1e6e3e'
+                 : r.situacao && r.situacao.includes('⚠️') ? '#8a6200'
+                 : r.situacao && r.situacao.includes('🔴') ? '#b00000' : '#333';
+    return '<tr>' +
+      '<td>' + d + '<br><small>' + (r.hora||'') + '</small></td>' +
+      '<td><strong>' + (r.posto||'—') + '</strong></td>' +
+      '<td>' + (r.colaborador||'—') + '<br><small>' + (r.funcao||'') + '</small></td>' +
+      '<td>' + (r.supervisor||'—') + '</td>' +
+      '<td style="color:' + sitColor + ';font-weight:600;">' + sit + '</td>' +
+      '<td>' + (r.obs_geral||'—') + '</td>' +
+      '</tr>';
   }).join('');
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>Relatório de Vistorias</title>
-  <style>
-    body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:20px;}
-    h1{font-size:15px;margin-bottom:2px;} p{font-size:10px;color:#555;margin-bottom:12px;}
-    table{width:100%;border-collapse:collapse;}
-    th{background:#1e2738;color:#e8a838;padding:6px 8px;text-align:left;font-size:10px;text-transform:uppercase;}
-    td{padding:5px 8px;border-bottom:1px solid #ddd;vertical-align:top;}
-    tr:nth-child(even) td{background:#f7f7f7;}
-    small{color:#666;}
-    @media print{body{margin:10px;}}
-  </style></head><body>
-  <h1>🛡️ Relatório de Vistorias — Supervisor</h1>
-  <p>Gerado em: ${dataHoje} &nbsp;|&nbsp; Total: ${registros.length} registros</p>
-  <table><thead><tr><th>Data/Hora</th><th>Posto</th><th>Colaborador</th><th>Supervisor</th><th>Situação</th><th>Observações</th></tr></thead>
-  <tbody>${rows}</tbody></table>
-  <script>window.onload=()=>{window.print();}<\/script></body></html>`;
-  const w = window.open('','_blank');
-  w.document.write(html); w.document.close();
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+  '<title>Relatório de Vistorias</title>' +
+  '<style>' +
+  'body{font-family:Arial,sans-serif;font-size:11px;color:#111;margin:20px;}' +
+  'h1{font-size:15px;margin-bottom:2px;}' +
+  '.filtro-info{font-size:10px;color:#555;margin-bottom:4px;}' +
+  '.total-info{font-size:10px;color:#555;margin-bottom:12px;}' +
+  'table{width:100%;border-collapse:collapse;}' +
+  'th{background:#1e2738;color:#e8a838;padding:6px 8px;text-align:left;font-size:10px;text-transform:uppercase;}' +
+  'td{padding:5px 8px;border-bottom:1px solid #ddd;vertical-align:top;}' +
+  'tr:nth-child(even) td{background:#f7f7f7;}' +
+  'small{color:#666;}' +
+  '@media print{body{margin:10px;}}' +
+  '</style></head><body>' +
+  '<h1>🛡️ Relatório de Vistorias — Supervisor</h1>' +
+  '<div class="filtro-info">Filtro: ' + filtroTexto + '</div>' +
+  '<div class="total-info">Gerado em: ' + dataHoje + ' &nbsp;|&nbsp; Exibindo: ' + dados.length + ' de ' + todosRegistros.length + ' registros</div>' +
+  '<table><thead><tr><th>Data/Hora</th><th>Posto</th><th>Colaborador</th><th>Supervisor</th><th>Situação</th><th>Observações</th></tr></thead>' +
+  '<tbody>' + rows + '</tbody></table>' +
+  '<script>window.onload=function(){window.print();}<\/script></body></html>';
+
+  var w = window.open('','_blank');
+  if(!w){ alert('Permita popups para gerar o PDF.'); return; }
+  w.document.write(html);
+  w.document.close();
 }
 
 // ── EXPORTAR TURNOS PDF ──
