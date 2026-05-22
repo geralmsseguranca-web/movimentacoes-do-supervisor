@@ -1633,17 +1633,21 @@
     </div>
   </div>
 
-  <!-- UNIFORME -->
-  <div class="card">
+  <!-- ══ PORTARIA — Uniforme + Equipamentos Eletrônicos ══ -->
+  <div class="card" id="card-portaria">
     <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:6px;">
-      <span>👕 Uniforme do Colaborador</span>
+      <span>🏢 Inspeção de Portaria</span>
       <span id="unif-badge" style="font-size:0.62rem;font-weight:700;letter-spacing:.5px;padding:3px 10px;border-radius:12px;display:none;"></span>
     </div>
 
-    <!-- Grade de itens com avaliação OK / Irregular / N/A -->
-    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px;">
+    <!-- ── Uniforme ── -->
+    <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+      <span style="display:inline-block;width:18px;height:1px;background:var(--border2);"></span>
+      👕 Uniforme do Colaborador
+      <span style="flex:1;height:1px;background:var(--border2);"></span>
+    </div>
 
-      <!-- Item: Camisa/camiseta -->
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:10px;">
       <div class="unif-item">
         <div class="unif-item-label">👕 Camisa / Camiseta padrão</div>
         <div class="rating-row">
@@ -1655,8 +1659,6 @@
           <label for="uc1_na">N/A</label>
         </div>
       </div>
-
-      <!-- Item: Calça -->
       <div class="unif-item">
         <div class="unif-item-label">👖 Calça padrão</div>
         <div class="rating-row">
@@ -1668,8 +1670,6 @@
           <label for="uc2_na">N/A</label>
         </div>
       </div>
-
-      <!-- Item: Colete/Jaqueta -->
       <div class="unif-item">
         <div class="unif-item-label">🦺 Colete / Jaqueta</div>
         <div class="rating-row">
@@ -1681,8 +1681,6 @@
           <label for="uc3_na">N/A</label>
         </div>
       </div>
-
-      <!-- Item: Calçado -->
       <div class="unif-item">
         <div class="unif-item-label">👟 Calçado adequado</div>
         <div class="rating-row">
@@ -1694,8 +1692,6 @@
           <label for="uc4_na">N/A</label>
         </div>
       </div>
-
-      <!-- Item: Crachá -->
       <div class="unif-item">
         <div class="unif-item-label">🪪 Crachá de identificação visível</div>
         <div class="rating-row">
@@ -1707,8 +1703,6 @@
           <label for="uc5_na">N/A</label>
         </div>
       </div>
-
-      <!-- Item: Conservação -->
       <div class="unif-item">
         <div class="unif-item-label">✨ Uniforme limpo e conservado</div>
         <div class="rating-row">
@@ -1720,161 +1714,25 @@
           <label for="uc6_na">N/A</label>
         </div>
       </div>
-
     </div>
 
-    <!-- Situação geral do uniforme (auto-calculada) -->
     <div id="unif-summary" style="display:none;background:rgba(30,45,66,.6);border:1px solid var(--border2);border-radius:7px;padding:8px 12px;margin-bottom:10px;font-size:0.75rem;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
       <span style="color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-size:0.65rem;font-weight:700;">Resumo</span>
       <span id="unif-ok-count" style="color:var(--ok);font-weight:700;"></span>
       <span id="unif-ng-count" style="color:var(--danger);font-weight:700;"></span>
     </div>
 
-    <div class="field">
+    <div class="field" style="margin-bottom:14px;">
       <label>Observação — Uniforme</label>
       <textarea id="obs_uniforme" placeholder="Descreva irregularidades de apresentação, itens ausentes ou danificados..."></textarea>
     </div>
-  </div>
 
-  <!-- RONDA — controlado por atualizarPainelRonda() -->
-  <div class="card" id="card-ronda-wrap" style="display:none;">
-    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:6px;">
-      <span>🔦 Ronda</span>
-      <span id="ronda-badge" style="font-size:0.62rem;font-weight:700;letter-spacing:.6px;padding:3px 10px;border-radius:12px;text-transform:uppercase;display:none;"></span>
+    <!-- ── Equipamentos Eletrônicos de Portaria ── -->
+    <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+      <span style="display:inline-block;width:18px;height:1px;background:var(--border2);"></span>
+      📡 Equipamentos Eletrônicos
+      <span style="flex:1;height:1px;background:var(--border2);"></span>
     </div>
-
-    <!-- ══ PAINEL VIGIA — obrigatório ══ -->
-    <div id="ronda-vigia-panel" style="display:none;">
-      <div style="background:linear-gradient(135deg,rgba(68,199,149,.08),rgba(68,199,149,.04));border:1px solid rgba(68,199,149,.22);border-left:3px solid var(--ok);border-radius:6px;padding:9px 12px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-        <span style="font-size:1rem;flex-shrink:0;">🛡️</span>
-        <span style="font-size:0.72rem;color:var(--ok);line-height:1.4;">
-          <strong>Colaborador com função Vigia</strong> — Registro de ronda é <strong>obrigatório</strong>. Preencha todos os campos abaixo.
-        </span>
-      </div>
-      <div class="row" style="margin-bottom:12px;">
-        <div class="field">
-          <label>Status da Ronda</label>
-          <select id="ronda_ok">
-            <option value="">— Selecione —</option>
-            <option value="Sim — Conforme">✅ Sim — Conforme</option>
-            <option value="Sim — Com ressalvas">⚠️ Sim — Com ressalvas</option>
-            <option value="Não realizada">🔴 Não realizada</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Frequência</label>
-          <select id="ronda_freq">
-            <option value="">— Selecione —</option>
-            <option>A cada 30 min</option>
-            <option>A cada 1 hora</option>
-            <option>A cada 2 horas</option>
-            <option>Conforme escala</option>
-          </select>
-        </div>
-      </div>
-      <div style="margin-bottom:10px;">
-        <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-          <span style="display:inline-block;width:18px;height:1px;background:var(--border2);"></span>
-          Pontos de Verificação
-          <span style="flex:1;height:1px;background:var(--border2);"></span>
-        </div>
-        <div class="check-grid">
-          <div class="check-item"><input type="checkbox" id="rd_c1"><label for="rd_c1">Rota perimetral concluída</label></div>
-          <div class="check-item"><input type="checkbox" id="rd_c2"><label for="rd_c2">Portões / acessos verificados</label></div>
-          <div class="check-item"><input type="checkbox" id="rd_c3"><label for="rd_c3">Áreas internas inspecionadas</label></div>
-          <div class="check-item"><input type="checkbox" id="rd_c4"><label for="rd_c4">Iluminação externa OK</label></div>
-          <div class="check-item"><input type="checkbox" id="rd_c5"><label for="rd_c5">Câmeras perimetrais verificadas</label></div>
-          <div class="check-item"><input type="checkbox" id="rd_c6"><label for="rd_c6">Sem indício de invasão / vandalismo</label></div>
-        </div>
-      </div>
-      <div class="field" style="margin-top:4px;">
-        <label>Ocorrências / Observações da Ronda</label>
-        <textarea id="obs_ronda" placeholder="Registre anomalias, suspeitos, avarias, acionamentos, pontos sem cobertura..." style="min-height:64px;"></textarea>
-      </div>
-    </div>
-
-    <!-- ══ PAINEL RONDA OPCIONAL (Porteiro / outras funções) ══ -->
-    <div id="ronda-opcional-panel" style="display:none;">
-      <!-- Botão para expandir -->
-      <div style="background:rgba(240,179,64,.06);border:1px solid rgba(240,179,64,.2);border-radius:6px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
-        <div>
-          <div style="font-size:0.75rem;color:var(--accent);font-weight:600;">🔦 Registrar Ronda</div>
-          <div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">Expanda para registrar se houve ronda neste posto</div>
-        </div>
-        <button id="btn-ronda-opcional" onclick="toggleRondaOpcional()"
-          style="background:none;border:1px solid var(--accent);color:var(--accent);border-radius:6px;font-size:0.7rem;font-weight:700;padding:6px 12px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s;">
-          ▶ Expandir
-        </button>
-      </div>
-
-      <!-- Corpo expansível -->
-      <div id="ronda-opcional-body" style="display:none;margin-top:12px;">
-
-        <!-- Nome do Rondante -->
-        <div style="background:rgba(88,169,245,.07);border:1px solid rgba(88,169,245,.2);border-left:3px solid var(--info);border-radius:6px;padding:10px 12px;margin-bottom:12px;">
-          <div style="font-size:0.65rem;color:var(--info);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">👤 Identificação do Rondante</div>
-          <div class="field">
-            <label>Nome do Rondante</label>
-            <select id="ronda_colaborador">
-              <option value="">— Selecione o colaborador —</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Status + Frequência -->
-        <div class="row" style="margin-bottom:12px;">
-          <div class="field">
-            <label>Status da Ronda</label>
-            <select id="ronda_ok_opc">
-              <option value="">— Selecione —</option>
-              <option value="Sim — Conforme">✅ Sim — Conforme</option>
-              <option value="Sim — Com ressalvas">⚠️ Sim — Com ressalvas</option>
-              <option value="Não realizada">🔴 Não realizada</option>
-              <option value="Não aplicável">— Não aplicável</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Frequência</label>
-            <select id="ronda_freq_opc">
-              <option value="">— Selecione —</option>
-              <option>A cada 30 min</option>
-              <option>A cada 1 hora</option>
-              <option>A cada 2 horas</option>
-              <option>Conforme escala</option>
-              <option>Esporádica</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Pontos de verificação -->
-        <div style="margin-bottom:10px;">
-          <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-            <span style="display:inline-block;width:18px;height:1px;background:var(--border2);"></span>
-            Pontos de Verificação
-            <span style="flex:1;height:1px;background:var(--border2);"></span>
-          </div>
-          <div class="check-grid">
-            <div class="check-item"><input type="checkbox" id="rd2_c1"><label for="rd2_c1">Rota perimetral concluída</label></div>
-            <div class="check-item"><input type="checkbox" id="rd2_c2"><label for="rd2_c2">Portões / acessos verificados</label></div>
-            <div class="check-item"><input type="checkbox" id="rd2_c3"><label for="rd2_c3">Áreas internas inspecionadas</label></div>
-            <div class="check-item"><input type="checkbox" id="rd2_c4"><label for="rd2_c4">Iluminação externa OK</label></div>
-            <div class="check-item"><input type="checkbox" id="rd2_c5"><label for="rd2_c5">Câmeras perimetrais verificadas</label></div>
-            <div class="check-item"><input type="checkbox" id="rd2_c6"><label for="rd2_c6">Sem indício de invasão / vandalismo</label></div>
-          </div>
-        </div>
-
-        <!-- Observações -->
-        <div class="field" style="margin-top:4px;">
-          <label>Ocorrências / Observações da Ronda</label>
-          <textarea id="obs_ronda_opc" placeholder="Registre anomalias, suspeitos, avarias, acionamentos..." style="min-height:60px;"></textarea>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- EQUIPAMENTOS -->
-  <div class="card">
-    <div class="card-title">Equipamentos e Instalações</div>
 
     <div class="item-avaliado">
       <div class="item-header">💻 Computador (PC)</div>
@@ -1929,7 +1787,157 @@
         </div>
       </div>
     </div>
-  </div>
+  </div><!-- /card-portaria -->
+
+  <!-- ══ RONDA — Se Aplicável ══ -->
+  <div class="card" id="card-ronda-wrap">
+    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:6px;">
+      <span>🔦 Ronda</span>
+      <span style="font-size:0.65rem;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">Se aplicável</span>
+    </div>
+
+    <!-- Botão principal de ativar ronda -->
+    <div style="background:rgba(88,169,245,.06);border:1px dashed rgba(88,169,245,.3);border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px;">
+      <div>
+        <div style="font-size:0.8rem;color:var(--info);font-weight:700;">🏍️ Registrar Ronda com Honda</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:3px;">Clique para abrir o formulário de ronda e vistoria da moto</div>
+      </div>
+      <button id="btn-ronda-principal" onclick="toggleRondaPrincipal()"
+        style="background:linear-gradient(135deg,rgba(88,169,245,.15),rgba(88,169,245,.07));border:1px solid var(--info);color:var(--info);border-radius:7px;font-size:0.75rem;font-weight:700;padding:8px 14px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .22s;font-family:var(--font-head);letter-spacing:.5px;text-transform:uppercase;">
+        ▶ Abrir
+      </button>
+    </div>
+
+    <!-- Corpo expansível da Ronda -->
+    <div id="ronda-principal-body" style="display:none;margin-top:12px;animation:fadeInDown .22s ease;">
+
+      <!-- Identificação do Honda -->
+      <div style="background:rgba(88,169,245,.07);border:1px solid rgba(88,169,245,.2);border-left:3px solid var(--info);border-radius:6px;padding:12px 14px;margin-bottom:12px;">
+        <div style="font-size:0.65rem;color:var(--info);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">🏍️ Identificação da Moto (Honda)</div>
+        <div class="row">
+          <div class="field">
+            <label>Nome do Rondante</label>
+            <select id="ronda_colaborador">
+              <option value="">— Selecione o colaborador —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Placa do Honda</label>
+            <input type="text" id="honda_placa" placeholder="Ex.: ABC-1234" style="text-transform:uppercase;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Vistoria do Honda -->
+      <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+        <span style="display:inline-block;width:18px;height:1px;background:var(--border2);"></span>
+        🔧 Vistoria do Honda
+        <span style="flex:1;height:1px;background:var(--border2);"></span>
+      </div>
+
+      <div class="item-avaliado">
+        <div class="item-header">🛞 Pneus</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="honda_pneus" id="hp_pneus_ok" value="OK"><label for="hp_pneus_ok">OK</label>
+          <input class="rating-opt rating-at" type="radio" name="honda_pneus" id="hp_pneus_at" value="Atenção"><label for="hp_pneus_at">Atenção</label>
+          <input class="rating-opt rating-ng" type="radio" name="honda_pneus" id="hp_pneus_ng" value="Com problema"><label for="hp_pneus_ng">Com problema</label>
+          <input class="rating-opt rating-na" type="radio" name="honda_pneus" id="hp_pneus_na" value="N/A"><label for="hp_pneus_na">N/A</label>
+        </div>
+      </div>
+
+      <div class="item-avaliado">
+        <div class="item-header">💡 Faróis / Lanternas</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="honda_farois" id="hp_far_ok" value="OK"><label for="hp_far_ok">OK</label>
+          <input class="rating-opt rating-at" type="radio" name="honda_farois" id="hp_far_at" value="Atenção"><label for="hp_far_at">Atenção</label>
+          <input class="rating-opt rating-ng" type="radio" name="honda_farois" id="hp_far_ng" value="Com falha"><label for="hp_far_ng">Com falha</label>
+          <input class="rating-opt rating-na" type="radio" name="honda_farois" id="hp_far_na" value="N/A"><label for="hp_far_na">N/A</label>
+        </div>
+      </div>
+
+      <div class="item-avaliado">
+        <div class="item-header">⛽ Combustível</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="honda_combustivel" id="hp_comb_ok" value="Abastecido"><label for="hp_comb_ok">Abastecido</label>
+          <input class="rating-opt rating-at" type="radio" name="honda_combustivel" id="hp_comb_at" value="Baixo"><label for="hp_comb_at">Baixo</label>
+          <input class="rating-opt rating-ng" type="radio" name="honda_combustivel" id="hp_comb_ng" value="Crítico"><label for="hp_comb_ng">Crítico</label>
+        </div>
+      </div>
+
+      <div class="item-avaliado">
+        <div class="item-header">🪖 Capacete / EPI</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="honda_epi" id="hp_epi_ok" value="OK"><label for="hp_epi_ok">OK</label>
+          <input class="rating-opt rating-ng" type="radio" name="honda_epi" id="hp_epi_ng" value="Ausente / Danificado"><label for="hp_epi_ng">Ausente/Danificado</label>
+          <input class="rating-opt rating-na" type="radio" name="honda_epi" id="hp_epi_na" value="N/A"><label for="hp_epi_na">N/A</label>
+        </div>
+      </div>
+
+      <div class="item-avaliado">
+        <div class="item-header">🔩 Estado Geral da Moto</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="honda_estado" id="hp_est_ok" value="OK"><label for="hp_est_ok">OK</label>
+          <input class="rating-opt rating-at" type="radio" name="honda_estado" id="hp_est_at" value="Atenção"><label for="hp_est_at">Atenção</label>
+          <input class="rating-opt rating-ng" type="radio" name="honda_estado" id="hp_est_ng" value="Com avaria"><label for="hp_est_ng">Com avaria</label>
+        </div>
+      </div>
+
+      <!-- Ronda em si -->
+      <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin:14px 0 8px;display:flex;align-items:center;gap:6px;">
+        <span style="display:inline-block;width:18px;height:1px;background:var(--border2);"></span>
+        🛡️ Ronda Realizada
+        <span style="flex:1;height:1px;background:var(--border2);"></span>
+      </div>
+
+      <div class="row" style="margin-bottom:10px;">
+        <div class="field">
+          <label>Status da Ronda</label>
+          <select id="ronda_ok_opc">
+            <option value="">— Selecione —</option>
+            <option value="Sim — Conforme">✅ Sim — Conforme</option>
+            <option value="Sim — Com ressalvas">⚠️ Sim — Com ressalvas</option>
+            <option value="Não realizada">🔴 Não realizada</option>
+            <option value="Não aplicável">— Não aplicável</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Frequência</label>
+          <select id="ronda_freq_opc">
+            <option value="">— Selecione —</option>
+            <option>A cada 30 min</option>
+            <option>A cada 1 hora</option>
+            <option>A cada 2 horas</option>
+            <option>Conforme escala</option>
+            <option>Esporádica</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Pontos de verificação -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          <span style="display:inline-block;width:18px;height:1px;background:var(--border2);"></span>
+          Pontos de Verificação
+          <span style="flex:1;height:1px;background:var(--border2);"></span>
+        </div>
+        <div class="check-grid">
+          <div class="check-item"><input type="checkbox" id="rd2_c1"><label for="rd2_c1">Rota perimetral concluída</label></div>
+          <div class="check-item"><input type="checkbox" id="rd2_c2"><label for="rd2_c2">Portões / acessos verificados</label></div>
+            <div class="check-item"><input type="checkbox" id="rd2_c3"><label for="rd2_c3">Áreas internas inspecionadas</label></div>
+            <div class="check-item"><input type="checkbox" id="rd2_c4"><label for="rd2_c4">Iluminação externa OK</label></div>
+            <div class="check-item"><input type="checkbox" id="rd2_c5"><label for="rd2_c5">Câmeras perimetrais verificadas</label></div>
+            <div class="check-item"><input type="checkbox" id="rd2_c6"><label for="rd2_c6">Sem indício de invasão / vandalismo</label></div>
+          </div>
+        </div>
+
+        <!-- Observações -->
+        <div class="field" style="margin-top:4px;">
+          <label>Ocorrências / Observações da Ronda</label>
+          <textarea id="obs_ronda_opc" placeholder="Registre anomalias, suspeitos, avarias, acionamentos..." style="min-height:60px;"></textarea>
+        </div>
+
+    </div><!-- /ronda-principal-body -->
+  </div><!-- /card-ronda-wrap -->
 
   <!-- VIATURA DO POSTO -->
   <div class="card">
@@ -2877,28 +2885,21 @@ let registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
 
 function getRadioVal(name){ const r=document.querySelector(`input[name="${name}"]:checked`); return r?r.value:''; }
 
-// Helpers para ler campos de Ronda (painel ativo por função)
+// Helpers para ler campos de Ronda — lê do novo painel principal (Honda)
 function getRondaValue(){
-  const funcao = (document.getElementById('funcao')?.value||'').toLowerCase().trim();
-  if(funcao === 'vigia') return document.getElementById('ronda_ok')?.value || '';
-  // Painel opcional: só retorna valor se o corpo estiver expandido
-  const body = document.getElementById('ronda-opcional-body');
+  const body = document.getElementById('ronda-principal-body');
   if(body && body.style.display !== 'none')
     return document.getElementById('ronda_ok_opc')?.value || '';
   return '';
 }
 function getRondaObs(){
-  const funcao = (document.getElementById('funcao')?.value||'').toLowerCase().trim();
-  if(funcao === 'vigia') return document.getElementById('obs_ronda')?.value || '';
-  const body = document.getElementById('ronda-opcional-body');
+  const body = document.getElementById('ronda-principal-body');
   if(body && body.style.display !== 'none')
     return document.getElementById('obs_ronda_opc')?.value || '';
   return '';
 }
 function getRondanteValue(){
-  const funcao = (document.getElementById('funcao')?.value||'').toLowerCase().trim();
-  if(funcao === 'vigia') return ''; // o próprio colaborador é o rondante
-  const body = document.getElementById('ronda-opcional-body');
+  const body = document.getElementById('ronda-principal-body');
   if(body && body.style.display !== 'none')
     return document.getElementById('ronda_colaborador')?.value || '';
   return '';
@@ -2959,6 +2960,13 @@ function salvarRegistro(){
     obs_geral:       v('obs_geral'),
     providencias:    v('providencias'),
     turnoId:         ta ? ta.id : null,
+    hondaPlaca:      v('honda_placa'),
+    hondaPneus:      r('honda_pneus'),
+    hondaFarois:     r('honda_farois'),
+    hondaCombustivel:r('honda_combustivel'),
+    hondaEpi:        r('honda_epi'),
+    hondaEstado:     r('honda_estado'),
+    rondaFreq:       v('ronda_freq_opc'),
   };
 
   // ── Salva no localStorage (fonte única da verdade) ──
@@ -3033,11 +3041,11 @@ function limparForm(){
   document.getElementById('hora_visita').value = now.toTimeString().slice(0,5);
   // Resetar painel ronda
   atualizarPainelRonda();
-  // Recolher painel ronda opcional se estava expandido
-  const roBody = document.getElementById('ronda-opcional-body');
-  const roBtn  = document.getElementById('btn-ronda-opcional');
+  // Fechar painel Honda se estava aberto
+  const roBody = document.getElementById('ronda-principal-body');
+  const roBtn  = document.getElementById('btn-ronda-principal');
   if(roBody) roBody.style.display = 'none';
-  if(roBtn)  roBtn.textContent = '▶ Expandir';
+  if(roBtn)  roBtn.textContent = '▶ Abrir';
 }
 
 // ══════════════════════════════════════════
@@ -4103,48 +4111,30 @@ function atualizarSelectsFormulario(){
 // ══════════════════════════════════════════
 // RONDA — painel dinâmico por função
 // ══════════════════════════════════════════
+// Card de ronda agora é sempre visível — função mantida para compatibilidade
 function atualizarPainelRonda(){
-  const funcao  = (document.getElementById('funcao')?.value || '').toLowerCase().trim();
-  const card    = document.getElementById('card-ronda-wrap');
-  const pVigia  = document.getElementById('ronda-vigia-panel');
-  const pOpc    = document.getElementById('ronda-opcional-panel');
-  const badge   = document.getElementById('ronda-badge');
-  if(!card) return;
-
-  // Oculta sub-painéis
-  if(pVigia) pVigia.style.display = 'none';
-  if(pOpc)   pOpc.style.display   = 'none';
-  if(badge)  badge.style.display  = 'none';
-
-  if(!funcao){
-    card.style.display = 'none';
-    return;
-  }
-
-  card.style.display = 'block';
-
-  if(funcao === 'vigia'){
-    if(pVigia) pVigia.style.display = 'block';
-    if(badge){
-      badge.textContent = '🛡️ Obrigatório';
-      badge.style.cssText = 'font-size:0.62rem;font-weight:700;letter-spacing:.6px;padding:3px 10px;border-radius:12px;text-transform:uppercase;background:rgba(68,199,149,.15);border:1px solid rgba(68,199,149,.35);color:var(--ok);display:inline-block;';
-    }
-  } else {
-    if(pOpc) pOpc.style.display = 'block';
-    if(badge){
-      badge.textContent = '⚠️ Opcional';
-      badge.style.cssText = 'font-size:0.62rem;font-weight:700;letter-spacing:.6px;padding:3px 10px;border-radius:12px;text-transform:uppercase;background:rgba(240,179,64,.12);border:1px solid rgba(240,179,64,.3);color:var(--accent2);display:inline-block;';
-    }
-  }
+  const card = document.getElementById('card-ronda-wrap');
+  if(card) card.style.display = 'block';
 }
 
-function toggleRondaOpcional(){
-  const body = document.getElementById('ronda-opcional-body');
-  const btn  = document.getElementById('btn-ronda-opcional');
+// Novo toggle: abre/fecha o painel principal da ronda com Honda
+function toggleRondaPrincipal(){
+  const body = document.getElementById('ronda-principal-body');
+  const btn  = document.getElementById('btn-ronda-principal');
   if(!body) return;
   const open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
-  if(btn) btn.textContent = open ? '▶ Expandir' : '▼ Recolher';
+  if(btn){
+    btn.textContent = open ? '▶ Abrir' : '▼ Fechar';
+    btn.style.background = open
+      ? 'linear-gradient(135deg,rgba(88,169,245,.15),rgba(88,169,245,.07))'
+      : 'linear-gradient(135deg,rgba(88,169,245,.25),rgba(88,169,245,.12))';
+  }
+}
+
+// Mantida para compatibilidade com qualquer chamada residual
+function toggleRondaOpcional(){
+  toggleRondaPrincipal();
 }
 
 // ══════════════════════════════════════════
