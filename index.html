@@ -1736,65 +1736,139 @@
     </div>
   </div>
 
-  <!-- RONDA — visível apenas para Vigia -->
+  <!-- RONDA — controlado por atualizarPainelRonda() -->
   <div class="card" id="card-ronda-wrap" style="display:none;">
     <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:6px;">
       <span>🔦 Ronda</span>
-      <span style="font-size:0.62rem;font-weight:700;letter-spacing:.6px;padding:3px 10px;border-radius:12px;background:rgba(68,199,149,.15);border:1px solid rgba(68,199,149,.35);color:var(--ok);text-transform:uppercase;">🛡️ Obrigatório</span>
+      <span id="ronda-badge" style="font-size:0.62rem;font-weight:700;letter-spacing:.6px;padding:3px 10px;border-radius:12px;text-transform:uppercase;display:none;"></span>
     </div>
 
-    <!-- Alerta obrigatoriedade -->
-    <div style="background:linear-gradient(135deg,rgba(68,199,149,.08),rgba(68,199,149,.04));border:1px solid rgba(68,199,149,.22);border-left:3px solid var(--ok);border-radius:6px;padding:9px 12px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
-      <span style="font-size:1rem;flex-shrink:0;">🛡️</span>
-      <span style="font-size:0.72rem;color:var(--ok);line-height:1.4;">
-        <strong>Colaborador com função Vigia</strong> — Registro de ronda é <strong>obrigatório</strong>. Preencha todos os campos abaixo.
-      </span>
+    <!-- ══ PAINEL VIGIA — obrigatório ══ -->
+    <div id="ronda-vigia-panel" style="display:none;">
+      <div style="background:linear-gradient(135deg,rgba(68,199,149,.08),rgba(68,199,149,.04));border:1px solid rgba(68,199,149,.22);border-left:3px solid var(--ok);border-radius:6px;padding:9px 12px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:1rem;flex-shrink:0;">🛡️</span>
+        <span style="font-size:0.72rem;color:var(--ok);line-height:1.4;">
+          <strong>Colaborador com função Vigia</strong> — Registro de ronda é <strong>obrigatório</strong>. Preencha todos os campos abaixo.
+        </span>
+      </div>
+      <div class="row" style="margin-bottom:12px;">
+        <div class="field">
+          <label>Status da Ronda</label>
+          <select id="ronda_ok">
+            <option value="">— Selecione —</option>
+            <option value="Sim — Conforme">✅ Sim — Conforme</option>
+            <option value="Sim — Com ressalvas">⚠️ Sim — Com ressalvas</option>
+            <option value="Não realizada">🔴 Não realizada</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Frequência</label>
+          <select id="ronda_freq">
+            <option value="">— Selecione —</option>
+            <option>A cada 30 min</option>
+            <option>A cada 1 hora</option>
+            <option>A cada 2 horas</option>
+            <option>Conforme escala</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          <span style="display:inline-block;width:18px;height:1px;background:var(--border2);"></span>
+          Pontos de Verificação
+          <span style="flex:1;height:1px;background:var(--border2);"></span>
+        </div>
+        <div class="check-grid">
+          <div class="check-item"><input type="checkbox" id="rd_c1"><label for="rd_c1">Rota perimetral concluída</label></div>
+          <div class="check-item"><input type="checkbox" id="rd_c2"><label for="rd_c2">Portões / acessos verificados</label></div>
+          <div class="check-item"><input type="checkbox" id="rd_c3"><label for="rd_c3">Áreas internas inspecionadas</label></div>
+          <div class="check-item"><input type="checkbox" id="rd_c4"><label for="rd_c4">Iluminação externa OK</label></div>
+          <div class="check-item"><input type="checkbox" id="rd_c5"><label for="rd_c5">Câmeras perimetrais verificadas</label></div>
+          <div class="check-item"><input type="checkbox" id="rd_c6"><label for="rd_c6">Sem indício de invasão / vandalismo</label></div>
+        </div>
+      </div>
+      <div class="field" style="margin-top:4px;">
+        <label>Ocorrências / Observações da Ronda</label>
+        <textarea id="obs_ronda" placeholder="Registre anomalias, suspeitos, avarias, acionamentos, pontos sem cobertura..." style="min-height:64px;"></textarea>
+      </div>
     </div>
 
-    <!-- Status + Frequência -->
-    <div class="row" style="margin-bottom:12px;">
-      <div class="field">
-        <label>Status da Ronda</label>
-        <select id="ronda_ok">
-          <option value="">— Selecione —</option>
-          <option value="Sim — Conforme">✅ Sim — Conforme</option>
-          <option value="Sim — Com ressalvas">⚠️ Sim — Com ressalvas</option>
-          <option value="Não realizada">🔴 Não realizada</option>
-        </select>
+    <!-- ══ PAINEL RONDA OPCIONAL (Porteiro / outras funções) ══ -->
+    <div id="ronda-opcional-panel" style="display:none;">
+      <!-- Botão para expandir -->
+      <div style="background:rgba(240,179,64,.06);border:1px solid rgba(240,179,64,.2);border-radius:6px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div>
+          <div style="font-size:0.75rem;color:var(--accent);font-weight:600;">🔦 Registrar Ronda</div>
+          <div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">Expanda para registrar se houve ronda neste posto</div>
+        </div>
+        <button id="btn-ronda-opcional" onclick="toggleRondaOpcional()"
+          style="background:none;border:1px solid var(--accent);color:var(--accent);border-radius:6px;font-size:0.7rem;font-weight:700;padding:6px 12px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s;">
+          ▶ Expandir
+        </button>
       </div>
-      <div class="field">
-        <label>Frequência</label>
-        <select id="ronda_freq">
-          <option value="">— Selecione —</option>
-          <option>A cada 30 min</option>
-          <option>A cada 1 hora</option>
-          <option>A cada 2 horas</option>
-          <option>Conforme escala</option>
-        </select>
-      </div>
-    </div>
 
-    <!-- Pontos de verificação -->
-    <div style="margin-bottom:10px;">
-      <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-        <span style="display:inline-block;width:18px;height:1px;background:var(--border2);"></span>
-        Pontos de Verificação
-        <span style="flex:1;height:1px;background:var(--border2);"></span>
-      </div>
-      <div class="check-grid">
-        <div class="check-item"><input type="checkbox" id="rd_c1"><label for="rd_c1">Rota perimetral concluída</label></div>
-        <div class="check-item"><input type="checkbox" id="rd_c2"><label for="rd_c2">Portões / acessos verificados</label></div>
-        <div class="check-item"><input type="checkbox" id="rd_c3"><label for="rd_c3">Áreas internas inspecionadas</label></div>
-        <div class="check-item"><input type="checkbox" id="rd_c4"><label for="rd_c4">Iluminação externa OK</label></div>
-        <div class="check-item"><input type="checkbox" id="rd_c5"><label for="rd_c5">Câmeras perimetrais verificadas</label></div>
-        <div class="check-item"><input type="checkbox" id="rd_c6"><label for="rd_c6">Sem indício de invasão / vandalismo</label></div>
-      </div>
-    </div>
+      <!-- Corpo expansível -->
+      <div id="ronda-opcional-body" style="display:none;margin-top:12px;">
 
-    <!-- Observações -->
-    <div class="field" style="margin-top:4px;">
-      <label>Ocorrências / Observações da Ronda</label>
-      <textarea id="obs_ronda" placeholder="Registre anomalias, suspeitos, avarias, acionamentos, pontos sem cobertura..." style="min-height:64px;"></textarea>
+        <!-- Nome do Rondante -->
+        <div style="background:rgba(88,169,245,.07);border:1px solid rgba(88,169,245,.2);border-left:3px solid var(--info);border-radius:6px;padding:10px 12px;margin-bottom:12px;">
+          <div style="font-size:0.65rem;color:var(--info);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">👤 Identificação do Rondante</div>
+          <div class="field">
+            <label>Nome do Rondante</label>
+            <select id="ronda_colaborador">
+              <option value="">— Selecione o colaborador —</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Status + Frequência -->
+        <div class="row" style="margin-bottom:12px;">
+          <div class="field">
+            <label>Status da Ronda</label>
+            <select id="ronda_ok_opc">
+              <option value="">— Selecione —</option>
+              <option value="Sim — Conforme">✅ Sim — Conforme</option>
+              <option value="Sim — Com ressalvas">⚠️ Sim — Com ressalvas</option>
+              <option value="Não realizada">🔴 Não realizada</option>
+              <option value="Não aplicável">— Não aplicável</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Frequência</label>
+            <select id="ronda_freq_opc">
+              <option value="">— Selecione —</option>
+              <option>A cada 30 min</option>
+              <option>A cada 1 hora</option>
+              <option>A cada 2 horas</option>
+              <option>Conforme escala</option>
+              <option>Esporádica</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Pontos de verificação -->
+        <div style="margin-bottom:10px;">
+          <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+            <span style="display:inline-block;width:18px;height:1px;background:var(--border2);"></span>
+            Pontos de Verificação
+            <span style="flex:1;height:1px;background:var(--border2);"></span>
+          </div>
+          <div class="check-grid">
+            <div class="check-item"><input type="checkbox" id="rd2_c1"><label for="rd2_c1">Rota perimetral concluída</label></div>
+            <div class="check-item"><input type="checkbox" id="rd2_c2"><label for="rd2_c2">Portões / acessos verificados</label></div>
+            <div class="check-item"><input type="checkbox" id="rd2_c3"><label for="rd2_c3">Áreas internas inspecionadas</label></div>
+            <div class="check-item"><input type="checkbox" id="rd2_c4"><label for="rd2_c4">Iluminação externa OK</label></div>
+            <div class="check-item"><input type="checkbox" id="rd2_c5"><label for="rd2_c5">Câmeras perimetrais verificadas</label></div>
+            <div class="check-item"><input type="checkbox" id="rd2_c6"><label for="rd2_c6">Sem indício de invasão / vandalismo</label></div>
+          </div>
+        </div>
+
+        <!-- Observações -->
+        <div class="field" style="margin-top:4px;">
+          <label>Ocorrências / Observações da Ronda</label>
+          <textarea id="obs_ronda_opc" placeholder="Registre anomalias, suspeitos, avarias, acionamentos..." style="min-height:60px;"></textarea>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2803,12 +2877,31 @@ let registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
 
 function getRadioVal(name){ const r=document.querySelector(`input[name="${name}"]:checked`); return r?r.value:''; }
 
-// Helpers para ler campos de Ronda (painel Vigia)
+// Helpers para ler campos de Ronda (painel ativo por função)
 function getRondaValue(){
-  return document.getElementById('ronda_ok')?.value || '';
+  const funcao = (document.getElementById('funcao')?.value||'').toLowerCase().trim();
+  if(funcao === 'vigia') return document.getElementById('ronda_ok')?.value || '';
+  // Painel opcional: só retorna valor se o corpo estiver expandido
+  const body = document.getElementById('ronda-opcional-body');
+  if(body && body.style.display !== 'none')
+    return document.getElementById('ronda_ok_opc')?.value || '';
+  return '';
 }
 function getRondaObs(){
-  return document.getElementById('obs_ronda')?.value || '';
+  const funcao = (document.getElementById('funcao')?.value||'').toLowerCase().trim();
+  if(funcao === 'vigia') return document.getElementById('obs_ronda')?.value || '';
+  const body = document.getElementById('ronda-opcional-body');
+  if(body && body.style.display !== 'none')
+    return document.getElementById('obs_ronda_opc')?.value || '';
+  return '';
+}
+function getRondanteValue(){
+  const funcao = (document.getElementById('funcao')?.value||'').toLowerCase().trim();
+  if(funcao === 'vigia') return ''; // o próprio colaborador é o rondante
+  const body = document.getElementById('ronda-opcional-body');
+  if(body && body.style.display !== 'none')
+    return document.getElementById('ronda_colaborador')?.value || '';
+  return '';
 }
 
 function salvarRegistro(){
@@ -2845,6 +2938,7 @@ function salvarRegistro(){
     vtrKmPercorrido: (kmIni > 0 && kmFim > kmIni) ? kmFim - kmIni : '',
     vtrEstado:       v('vtr_estado'),
     ronda:           getRondaValue(),
+    rondante:        getRondanteValue(),
     obs_ronda:       getRondaObs(),
     pc:              r('pc'),
     cameras:         r('cameras'),
@@ -2939,6 +3033,11 @@ function limparForm(){
   document.getElementById('hora_visita').value = now.toTimeString().slice(0,5);
   // Resetar painel ronda
   atualizarPainelRonda();
+  // Recolher painel ronda opcional se estava expandido
+  const roBody = document.getElementById('ronda-opcional-body');
+  const roBtn  = document.getElementById('btn-ronda-opcional');
+  if(roBody) roBody.style.display = 'none';
+  if(roBtn)  roBtn.textContent = '▶ Expandir';
 }
 
 // ══════════════════════════════════════════
@@ -3986,17 +4085,66 @@ function atualizarSelectsFormulario(){
     });
     selColab.value = cur;
   }
+
+  // Select de rondante (painel ronda opcional)
+  const selRondante = document.getElementById('ronda_colaborador');
+  if(selRondante){
+    const cur = selRondante.value;
+    selRondante.innerHTML = '<option value="">— Selecione o colaborador —</option>';
+    colaboradores.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      selRondante.appendChild(o);
+    });
+    selRondante.value = cur;
+  }
 }
 
 // ══════════════════════════════════════════
 // RONDA — painel dinâmico por função
 // ══════════════════════════════════════════
 function atualizarPainelRonda(){
-  const funcao = (document.getElementById('funcao')?.value || '').toLowerCase().trim();
-  const card   = document.getElementById('card-ronda-wrap');
+  const funcao  = (document.getElementById('funcao')?.value || '').toLowerCase().trim();
+  const card    = document.getElementById('card-ronda-wrap');
+  const pVigia  = document.getElementById('ronda-vigia-panel');
+  const pOpc    = document.getElementById('ronda-opcional-panel');
+  const badge   = document.getElementById('ronda-badge');
   if(!card) return;
-  // Card de ronda só aparece quando a função for Vigia
-  card.style.display = (funcao === 'vigia') ? 'block' : 'none';
+
+  // Oculta sub-painéis
+  if(pVigia) pVigia.style.display = 'none';
+  if(pOpc)   pOpc.style.display   = 'none';
+  if(badge)  badge.style.display  = 'none';
+
+  if(!funcao){
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+
+  if(funcao === 'vigia'){
+    if(pVigia) pVigia.style.display = 'block';
+    if(badge){
+      badge.textContent = '🛡️ Obrigatório';
+      badge.style.cssText = 'font-size:0.62rem;font-weight:700;letter-spacing:.6px;padding:3px 10px;border-radius:12px;text-transform:uppercase;background:rgba(68,199,149,.15);border:1px solid rgba(68,199,149,.35);color:var(--ok);display:inline-block;';
+    }
+  } else {
+    if(pOpc) pOpc.style.display = 'block';
+    if(badge){
+      badge.textContent = '⚠️ Opcional';
+      badge.style.cssText = 'font-size:0.62rem;font-weight:700;letter-spacing:.6px;padding:3px 10px;border-radius:12px;text-transform:uppercase;background:rgba(240,179,64,.12);border:1px solid rgba(240,179,64,.3);color:var(--accent2);display:inline-block;';
+    }
+  }
+}
+
+function toggleRondaOpcional(){
+  const body = document.getElementById('ronda-opcional-body');
+  const btn  = document.getElementById('btn-ronda-opcional');
+  if(!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if(btn) btn.textContent = open ? '▶ Expandir' : '▼ Recolher';
 }
 
 // ══════════════════════════════════════════
