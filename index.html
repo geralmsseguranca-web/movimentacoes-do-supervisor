@@ -1611,6 +1611,47 @@
         </select>
       </div>
     </div>
+
+    <!-- Toggle: 2º colaborador (Dom Vigia) -->
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 14px;margin-bottom:6px;margin-top:2px;">
+      <div>
+        <div style="font-size:0.78rem;font-weight:700;color:var(--text2);">👥 Tem 2º colaborador no posto?</div>
+        <div style="font-size:0.63rem;color:var(--muted);margin-top:1px;">Ex.: porteiro + vigia juntos</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button id="btn-dom-vigia-sim" onclick="toggleDomVigia(true)"
+          style="padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.72rem;font-weight:700;cursor:pointer;transition:all .18s;font-family:var(--font-head);">
+          ✅ Sim
+        </button>
+        <button id="btn-dom-vigia-nao" onclick="toggleDomVigia(false)"
+          style="padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.72rem;font-weight:700;cursor:pointer;transition:all .18s;font-family:var(--font-head);">
+          ❌ Não
+        </button>
+      </div>
+    </div>
+
+    <!-- Campo 2º Colaborador — aparece só se toggle = Sim -->
+    <div id="dom-vigia-body" style="display:none;animation:fadeInDown .2s ease;">
+      <div class="row">
+        <div class="field">
+          <label>2º Colaborador (Dom. Vigia)</label>
+          <select id="dom_vigia">
+            <option value="">— Selecione o 2º colaborador —</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Função do 2º</label>
+          <select id="dom_vigia_funcao">
+            <option value="">— Selecione —</option>
+            <option>Porteiro</option>
+            <option>Vigia</option>
+            <option>Zelador</option>
+            <option>Serviços Gerais</option>
+            <option>Recepcionista</option>
+          </select>
+        </div>
+      </div>
+    </div>
     <div class="row three">
       <div class="field">
         <label>Data da Visita</label>
@@ -1796,24 +1837,26 @@
       <span style="font-size:0.65rem;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">Se aplicável</span>
     </div>
 
-    <!-- Botão principal de ativar ronda -->
+    <!-- Toggle nível 1: Tem vigia de plantão? -->
     <div style="background:rgba(88,169,245,.06);border:1px dashed rgba(88,169,245,.3);border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px;">
       <div>
-        <div style="font-size:0.8rem;color:var(--info);font-weight:700;">🏍️ Registrar Ronda com Moto</div>
-        <div style="font-size:0.65rem;color:var(--muted);margin-top:3px;">Clique para abrir o formulário de ronda e vistoria da moto</div>
+        <div style="font-size:0.8rem;color:var(--info);font-weight:700;">👮 Tem vigia de plantão?</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:3px;">Indicar se há vigia rondante escalado no posto</div>
       </div>
-      <button id="btn-ronda-principal" onclick="toggleRondaPrincipal()"
-        style="background:linear-gradient(135deg,rgba(88,169,245,.15),rgba(88,169,245,.07));border:1px solid var(--info);color:var(--info);border-radius:7px;font-size:0.75rem;font-weight:700;padding:8px 14px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .22s;font-family:var(--font-head);letter-spacing:.5px;text-transform:uppercase;">
-        ▶ Abrir
-      </button>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button id="btn-vigia-plantao-sim" onclick="toggleVigiaDePlantao(true)"
+          style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:6px;font-size:0.75rem;font-weight:700;padding:7px 13px;cursor:pointer;transition:all .18s;font-family:var(--font-head);">Sim</button>
+        <button id="btn-vigia-plantao-nao" onclick="toggleVigiaDePlantao(false)"
+          style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:6px;font-size:0.75rem;font-weight:700;padding:7px 13px;cursor:pointer;transition:all .18s;font-family:var(--font-head);">Não</button>
+      </div>
     </div>
 
-    <!-- Corpo expansível da Ronda -->
-    <div id="ronda-principal-body" style="display:none;margin-top:12px;animation:fadeInDown .22s ease;">
+    <!-- Corpo nível 1: campo do vigia + toggle VTR -->
+    <div id="vigia-plantao-body" style="display:none;margin-top:10px;animation:fadeInDown .22s ease;">
 
-      <!-- Identificação da Moto -->
-      <div style="background:rgba(88,169,245,.07);border:1px solid rgba(88,169,245,.2);border-left:3px solid var(--info);border-radius:6px;padding:12px 14px;margin-bottom:12px;">
-        <div style="font-size:0.65rem;color:var(--info);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">🏍️ Identificação da Moto</div>
+      <!-- Campo Vigia (Rondante) -->
+      <div style="background:rgba(88,169,245,.07);border:1px solid rgba(88,169,245,.2);border-left:3px solid var(--info);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:0.65rem;color:var(--info);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">👮 Vigia de Plantão</div>
         <div class="row">
           <div class="field">
             <label>Vigia (Rondante)</label>
@@ -1821,12 +1864,36 @@
               <option value="">— Selecione o vigia —</option>
             </select>
           </div>
-          <div class="field">
-            <label>Placa da Moto</label>
-            <input type="text" id="honda_placa" placeholder="Ex.: ABC-1234" style="text-transform:uppercase;">
-          </div>
         </div>
       </div>
+
+      <!-- Toggle nível 2: Tem VTR? -->
+      <div style="background:rgba(88,169,245,.04);border:1px dashed rgba(88,169,245,.25);border-radius:7px;padding:10px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px;">
+        <div>
+          <div style="font-size:0.78rem;color:var(--info);font-weight:700;">🏍️ Tem VTR (carro/moto)?</div>
+          <div style="font-size:0.63rem;color:var(--muted);margin-top:2px;">Indicar se há viatura disponível para ronda</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button id="btn-vtr-ronda-sim" onclick="toggleVtrRonda(true)"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:6px;font-size:0.75rem;font-weight:700;padding:7px 13px;cursor:pointer;transition:all .18s;font-family:var(--font-head);">Sim</button>
+          <button id="btn-vtr-ronda-nao" onclick="toggleVtrRonda(false)"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:6px;font-size:0.75rem;font-weight:700;padding:7px 13px;cursor:pointer;transition:all .18s;font-family:var(--font-head);">Não</button>
+        </div>
+      </div>
+
+      <!-- Corpo nível 2: VTR + vistoria moto -->
+      <div id="ronda-principal-body" style="display:none;margin-top:10px;animation:fadeInDown .22s ease;">
+
+        <!-- Identificação da Moto -->
+        <div style="background:rgba(88,169,245,.07);border:1px solid rgba(88,169,245,.2);border-left:3px solid var(--info);border-radius:6px;padding:12px 14px;margin-bottom:12px;">
+          <div style="font-size:0.65rem;color:var(--info);font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">🏍️ Identificação da Moto</div>
+          <div class="row">
+            <div class="field">
+              <label>Placa da Moto</label>
+              <input type="text" id="honda_placa" placeholder="Ex.: ABC-1234" style="text-transform:uppercase;">
+            </div>
+          </div>
+        </div>
 
       <!-- Vistoria da Moto -->
       <div style="font-size:0.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
@@ -1961,33 +2028,62 @@
         <textarea id="obs_ronda_opc" placeholder="Registre anomalias, suspeitos, avarias, acionamentos..." style="min-height:60px;"></textarea>
       </div>
 
-    </div><!-- /ronda-principal-body -->
+      </div><!-- /ronda-principal-body -->
+    </div><!-- /vigia-plantao-body -->
   </div><!-- /card-ronda-wrap -->
 
   <!-- VIATURA DO POSTO -->
   <div class="card">
-    <div class="card-title">Viatura do Posto</div>
-    <div class="row full">
-      <div class="field">
-        <label>Tipo de Viatura</label>
-        <select id="viatura_tipo">
-          <option value="">— Selecione —</option>
-        </select>
-      <input type="hidden" id="viatura_placa" value="">
+    <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:6px;">
+      <span>🚗 Viatura do Posto</span>
+    </div>
+
+    <!-- Toggle: Tem viatura? -->
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px;">
+      <div>
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text1);">🚙 Tem viatura neste posto?</div>
+        <div style="font-size:0.65rem;color:var(--muted);margin-top:2px;">Carro, moto ou outra VTR disponível</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button id="btn-viatura-sim" onclick="toggleViaturaPosto(true)"
+          style="padding:6px 16px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.75rem;font-weight:700;cursor:pointer;transition:all .18s;font-family:var(--font-head);">
+          ✅ Sim
+        </button>
+        <button id="btn-viatura-nao" onclick="toggleViaturaPosto(false)"
+          style="padding:6px 16px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:0.75rem;font-weight:700;cursor:pointer;transition:all .18s;font-family:var(--font-head);">
+          ❌ Não
+        </button>
       </div>
     </div>
-    <div class="item-avaliado" style="margin-top:0;">
-      <div class="item-header">Estado Geral</div>
-      <div class="rating-row">
-        <input class="rating-opt rating-ok" type="radio" name="viatura_posto" id="vp_ok" value="OK"><label for="vp_ok">OK</label>
-        <input class="rating-opt rating-at" type="radio" name="viatura_posto" id="vp_at" value="Atenção"><label for="vp_at">Atenção</label>
-        <input class="rating-opt rating-ng" type="radio" name="viatura_posto" id="vp_ng" value="Com problemas"><label for="vp_ng">Com problemas</label>
-        <input class="rating-opt rating-na" type="radio" name="viatura_posto" id="vp_na" value="N/A"><label for="vp_na">N/A</label>
+
+    <!-- Conteúdo exibido apenas se tem viatura -->
+    <div id="viatura-posto-body" style="display:none;animation:fadeInDown .2s ease;">
+      <div class="row full">
+        <div class="field">
+          <label>Tipo de Viatura</label>
+          <select id="viatura_tipo">
+            <option value="">— Selecione —</option>
+          </select>
+          <input type="hidden" id="viatura_placa" value="">
+        </div>
+      </div>
+      <div class="item-avaliado" style="margin-top:0;">
+        <div class="item-header">Estado Geral</div>
+        <div class="rating-row">
+          <input class="rating-opt rating-ok" type="radio" name="viatura_posto" id="vp_ok" value="OK"><label for="vp_ok">OK</label>
+          <input class="rating-opt rating-at" type="radio" name="viatura_posto" id="vp_at" value="Atenção"><label for="vp_at">Atenção</label>
+          <input class="rating-opt rating-ng" type="radio" name="viatura_posto" id="vp_ng" value="Com problemas"><label for="vp_ng">Com problemas</label>
+          <input class="rating-opt rating-na" type="radio" name="viatura_posto" id="vp_na" value="N/A"><label for="vp_na">N/A</label>
+        </div>
+      </div>
+      <div class="field" style="margin-top:8px;">
+        <label>Observações — Viatura do Posto</label>
+        <textarea id="obs_viatura_posto" placeholder="Avarias, combustível, documentação..."></textarea>
       </div>
     </div>
-    <div class="field" style="margin-top:8px;">
-      <label>Observações — Viatura do Posto</label>
-      <textarea id="obs_viatura_posto" placeholder="Avarias, combustível, documentação..."></textarea>
+    <!-- Mensagem quando não tem viatura -->
+    <div id="viatura-posto-nao" style="display:none;text-align:center;padding:10px 0 4px;font-size:0.75rem;color:var(--muted);">
+      ℹ️ Posto sem viatura — campos não aplicáveis
     </div>
   </div>
 
@@ -2907,22 +3003,28 @@ let registros = JSON.parse(localStorage.getItem('supervisorRegistros') || '[]');
 
 function getRadioVal(name){ const r=document.querySelector(`input[name="${name}"]:checked`); return r?r.value:''; }
 
-// Helpers para ler campos de Ronda — lê do novo painel principal (Honda)
+// Helpers para ler campos de Ronda — verifica se vigia de plantão foi ativado
 function getRondaValue(){
-  const body = document.getElementById('ronda-principal-body');
-  if(body && body.style.display !== 'none')
-    return document.getElementById('ronda_ok_opc')?.value || '';
+  const vigiaBody = document.getElementById('vigia-plantao-body');
+  if(vigiaBody && vigiaBody.style.display !== 'none'){
+    const body = document.getElementById('ronda-principal-body');
+    if(body && body.style.display !== 'none')
+      return document.getElementById('ronda_ok_opc')?.value || '';
+  }
   return '';
 }
 function getRondaObs(){
-  const body = document.getElementById('ronda-principal-body');
-  if(body && body.style.display !== 'none')
-    return document.getElementById('obs_ronda_opc')?.value || '';
+  const vigiaBody = document.getElementById('vigia-plantao-body');
+  if(vigiaBody && vigiaBody.style.display !== 'none'){
+    const body = document.getElementById('ronda-principal-body');
+    if(body && body.style.display !== 'none')
+      return document.getElementById('obs_ronda_opc')?.value || '';
+  }
   return '';
 }
 function getRondanteValue(){
-  const body = document.getElementById('ronda-principal-body');
-  if(body && body.style.display !== 'none')
+  const vigiaBody = document.getElementById('vigia-plantao-body');
+  if(vigiaBody && vigiaBody.style.display !== 'none')
     return document.getElementById('ronda_colaborador')?.value || '';
   return '';
 }
@@ -2968,6 +3070,12 @@ function salvarRegistro(){
     cancela:         r('cancela'),
     geladeira:       r('geladeira'),
     microondas:      r('microondas'),
+    domVigia:        v('dom_vigia'),
+    domVigiaFuncao:  v('dom_vigia_funcao'),
+    temDomVigia:     (window._toggleDomVigia === true ? 'Sim' : (window._toggleDomVigia === false ? 'Nao' : '')),
+    temViatura:      (window._toggleViatura === true ? 'Sim' : (window._toggleViatura === false ? 'Nao' : '')),
+    temVigiaDePlantao: (window._toggleVigiaDePlantao === true ? 'Sim' : (window._toggleVigiaDePlantao === false ? 'Nao' : '')),
+    temVtrRonda:     (window._toggleVtrRonda === true ? 'Sim' : (window._toggleVtrRonda === false ? 'Nao' : '')),
     viatura:         r('viatura_posto'),
     viaturaTipo:     v('viatura_tipo'),
     viaturaPlaca:    v('viatura_placa'),
@@ -3044,6 +3152,21 @@ function limparFormSilencioso(){
   document.querySelectorAll('#tab-vistoria input[type=checkbox]').forEach(el=>el.checked=false);
   document.querySelectorAll('#tab-vistoria input[type=radio]').forEach(el=>el.checked=false);
   if(typeof atualizarBadgeUniforme === 'function') atualizarBadgeUniforme();
+  // Resetar toggles de dom vigia, viatura e ronda
+  window._toggleDomVigia = undefined;
+  window._toggleViatura  = undefined;
+  window._toggleVigiaDePlantao = undefined;
+  window._toggleVtrRonda = undefined;
+  var dvBody = document.getElementById('dom-vigia-body'); if(dvBody) dvBody.style.display='none';
+  var vBody  = document.getElementById('viatura-posto-body'); if(vBody) vBody.style.display='none';
+  var vNao   = document.getElementById('viatura-posto-nao'); if(vNao) vNao.style.display='none';
+  var vpBody = document.getElementById('vigia-plantao-body'); if(vpBody) vpBody.style.display='none';
+  var rpBody = document.getElementById('ronda-principal-body'); if(rpBody) rpBody.style.display='none';
+  ['btn-dom-vigia-sim','btn-dom-vigia-nao','btn-viatura-sim','btn-viatura-nao',
+   'btn-vigia-plantao-sim','btn-vigia-plantao-nao','btn-vtr-ronda-sim','btn-vtr-ronda-nao'].forEach(function(id){
+    var b=document.getElementById(id); if(!b) return;
+    b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
+  });
   const now = new Date();
   const dateStr = now.toISOString().slice(0,10);
   const timeStr = now.toTimeString().slice(0,5);
@@ -3063,11 +3186,22 @@ function limparForm(){
   document.getElementById('hora_visita').value = now.toTimeString().slice(0,5);
   // Resetar painel ronda
   atualizarPainelRonda();
-  // Fechar painel Honda se estava aberto
-  const roBody = document.getElementById('ronda-principal-body');
-  const roBtn  = document.getElementById('btn-ronda-principal');
-  if(roBody) roBody.style.display = 'none';
-  if(roBtn)  roBtn.textContent = '▶ Abrir';
+  // Fechar painéis de ronda/vigia
+  var vpBody = document.getElementById('vigia-plantao-body'); if(vpBody) vpBody.style.display='none';
+  var rpBody = document.getElementById('ronda-principal-body'); if(rpBody) rpBody.style.display='none';
+  // Resetar toggles dom vigia, viatura e ronda
+  window._toggleDomVigia = undefined;
+  window._toggleViatura  = undefined;
+  window._toggleVigiaDePlantao = undefined;
+  window._toggleVtrRonda = undefined;
+  var dvBody = document.getElementById('dom-vigia-body'); if(dvBody) dvBody.style.display='none';
+  var vBody  = document.getElementById('viatura-posto-body'); if(vBody) vBody.style.display='none';
+  var vNao   = document.getElementById('viatura-posto-nao'); if(vNao) vNao.style.display='none';
+  ['btn-dom-vigia-sim','btn-dom-vigia-nao','btn-viatura-sim','btn-viatura-nao',
+   'btn-vigia-plantao-sim','btn-vigia-plantao-nao','btn-vtr-ronda-sim','btn-vtr-ronda-nao'].forEach(function(id){
+    var b=document.getElementById(id); if(!b) return;
+    b.style.background='var(--surface2)'; b.style.borderColor='var(--border)'; b.style.color='var(--muted)';
+  });
 }
 
 // ══════════════════════════════════════════
@@ -4128,6 +4262,19 @@ function atualizarSelectsFormulario(){
     });
     selRondante.value = cur;
   }
+
+  // Select de 2º colaborador (Dom Vigia)
+  const selDomVigia = document.getElementById('dom_vigia');
+  if(selDomVigia){
+    const cur = selDomVigia.value;
+    selDomVigia.innerHTML = '<option value="">— Selecione o 2º colaborador —</option>';
+    colaboradores.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      selDomVigia.appendChild(o);
+    });
+    selDomVigia.value = cur;
+  }
 }
 
 // ══════════════════════════════════════════
@@ -4141,22 +4288,87 @@ function atualizarPainelRonda(){
 
 // Novo toggle: abre/fecha o painel principal da ronda com Honda
 function toggleRondaPrincipal(){
-  const body = document.getElementById('ronda-principal-body');
-  const btn  = document.getElementById('btn-ronda-principal');
-  if(!body) return;
-  const open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
-  if(btn){
-    btn.textContent = open ? '▶ Abrir' : '▼ Fechar';
-    btn.style.background = open
-      ? 'linear-gradient(135deg,rgba(88,169,245,.15),rgba(88,169,245,.07))'
-      : 'linear-gradient(135deg,rgba(88,169,245,.25),rgba(88,169,245,.12))';
+  // Mantida por compatibilidade — agora não usada diretamente na UI
+}
+
+// ── Toggle: Tem vigia de plantão? ──
+function toggleVigiaDePlantao(tem){
+  window._toggleVigiaDePlantao = tem;
+  var body = document.getElementById('vigia-plantao-body');
+  if(body) body.style.display = tem ? 'block' : 'none';
+  // Se desligou, colapsa o nível 2 também
+  if(!tem) toggleVtrRonda(null);
+  var btnSim = document.getElementById('btn-vigia-plantao-sim');
+  var btnNao = document.getElementById('btn-vigia-plantao-nao');
+  if(btnSim && btnNao){
+    if(tem){
+      btnSim.style.background='rgba(64,196,128,.18)'; btnSim.style.borderColor='var(--ok)'; btnSim.style.color='var(--ok)';
+      btnNao.style.background='var(--surface2)'; btnNao.style.borderColor='var(--border)'; btnNao.style.color='var(--muted)';
+    } else {
+      btnNao.style.background='rgba(236,87,87,.15)'; btnNao.style.borderColor='var(--danger)'; btnNao.style.color='var(--danger)';
+      btnSim.style.background='var(--surface2)'; btnSim.style.borderColor='var(--border)'; btnSim.style.color='var(--muted)';
+    }
   }
 }
 
-// Mantida para compatibilidade com qualquer chamada residual
-function toggleRondaOpcional(){
-  toggleRondaPrincipal();
+// ── Toggle: Tem VTR (carro/moto) na ronda? ──
+function toggleVtrRonda(tem){
+  window._toggleVtrRonda = tem;
+  var body = document.getElementById('ronda-principal-body');
+  if(body) body.style.display = (tem === true) ? 'block' : 'none';
+  var btnSim = document.getElementById('btn-vtr-ronda-sim');
+  var btnNao = document.getElementById('btn-vtr-ronda-nao');
+  if(btnSim && btnNao){
+    if(tem === true){
+      btnSim.style.background='rgba(64,196,128,.18)'; btnSim.style.borderColor='var(--ok)'; btnSim.style.color='var(--ok)';
+      btnNao.style.background='var(--surface2)'; btnNao.style.borderColor='var(--border)'; btnNao.style.color='var(--muted)';
+    } else if(tem === false){
+      btnNao.style.background='rgba(236,87,87,.15)'; btnNao.style.borderColor='var(--danger)'; btnNao.style.color='var(--danger)';
+      btnSim.style.background='var(--surface2)'; btnSim.style.borderColor='var(--border)'; btnSim.style.color='var(--muted)';
+    } else {
+      // reset
+      btnSim.style.background='var(--surface2)'; btnSim.style.borderColor='var(--border)'; btnSim.style.color='var(--muted)';
+      btnNao.style.background='var(--surface2)'; btnNao.style.borderColor='var(--border)'; btnNao.style.color='var(--muted)';
+    }
+  }
+}
+
+// ── Toggle: 2º colaborador (Dom Vigia) ──
+function toggleDomVigia(tem){
+  window._toggleDomVigia = tem;
+  var body = document.getElementById("dom-vigia-body");
+  if(body) body.style.display = tem ? "block" : "none";
+  var btnSim = document.getElementById("btn-dom-vigia-sim");
+  var btnNao = document.getElementById("btn-dom-vigia-nao");
+  if(btnSim && btnNao){
+    if(tem){
+      btnSim.style.background="rgba(64,196,128,.18)"; btnSim.style.borderColor="var(--ok)"; btnSim.style.color="var(--ok)";
+      btnNao.style.background="var(--surface2)"; btnNao.style.borderColor="var(--border)"; btnNao.style.color="var(--muted)";
+    } else {
+      btnNao.style.background="rgba(236,87,87,.15)"; btnNao.style.borderColor="var(--danger)"; btnNao.style.color="var(--danger)";
+      btnSim.style.background="var(--surface2)"; btnSim.style.borderColor="var(--border)"; btnSim.style.color="var(--muted)";
+    }
+  }
+}
+
+// ── Toggle: Viatura do Posto ──
+function toggleViaturaPosto(tem){
+  window._toggleViatura = tem;
+  var body = document.getElementById("viatura-posto-body");
+  var nao  = document.getElementById("viatura-posto-nao");
+  if(body) body.style.display = tem ? "block" : "none";
+  if(nao)  nao.style.display  = tem ? "none"  : "block";
+  var btnSim = document.getElementById("btn-viatura-sim");
+  var btnNao = document.getElementById("btn-viatura-nao");
+  if(btnSim && btnNao){
+    if(tem){
+      btnSim.style.background="rgba(64,196,128,.18)"; btnSim.style.borderColor="var(--ok)"; btnSim.style.color="var(--ok)";
+      btnNao.style.background="var(--surface2)"; btnNao.style.borderColor="var(--border)"; btnNao.style.color="var(--muted)";
+    } else {
+      btnNao.style.background="rgba(236,87,87,.15)"; btnNao.style.borderColor="var(--danger)"; btnNao.style.color="var(--danger)";
+      btnSim.style.background="var(--surface2)"; btnSim.style.borderColor="var(--border)"; btnSim.style.color="var(--muted)";
+    }
+  }
 }
 
 // Aplica borda verde no card-label do checkbox quando marcado
